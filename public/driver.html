@@ -878,6 +878,10 @@
             <button style="background:none; border:none; color:var(--primary); font-weight:700; cursor:pointer; font-size:12px;" onclick="openDestinationPrompt()">Change</button>
         </div>
 
+        <div class="destination-banner" aria-live="polite">
+            <span>📍 Live Location: <strong id="currentLocationDisplay">Waiting for GPS...</strong></span>
+        </div>
+
         <div class="card-grid">
             <div class="metric-card" onclick="openQueueModal()" title="Click to view full queue position details">
                 <div class="metric-label">Queue Position</div>
@@ -1018,6 +1022,9 @@
         let allRanksList = [];
         let approvedRanksList = [];
         let activeRankObj = null;
+        let lastLocationLookupAt = 0;
+        let lastLocationLookupLat = null;
+        let lastLocationLookupLng = null;
         let secondaryRankObj = null;
         let driverLat = -23.8333;
         let driverLng = 30.1667;
@@ -1291,11 +1298,50 @@ async function generateNewPasscode() {
             document.getElementById("rankSearchInput").value = name;
         }
 
+        async function updateCurrentLocationName(latitude, longitude, accuracy) {
+            const display = document.getElementById("currentLocationDisplay");
+            if (!display) return;
+
+            const coordinates = `${Number(latitude).toFixed(5)}, ${Number(longitude).toFixed(5)}`;
+            display.textContent = `Detecting area… (${coordinates})`;
+
+            const now = Date.now();
+            const movedKm = lastLocationLookupLat === null
+                ? Infinity
+                : calculateDistance(lastLocationLookupLat, lastLocationLookupLng, latitude, longitude);
+            if (now - lastLocationLookupAt < 30000 && movedKm < 0.25) return;
+
+            lastLocationLookupAt = now;
+            lastLocationLookupLat = latitude;
+            lastLocationLookupLng = longitude;
+
+            try {
+                const response = await fetch(
+                    `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${encodeURIComponent(latitude)}&lon=${encodeURIComponent(longitude)}&zoom=16&addressdetails=1`,
+                    { headers: { "Accept": "application/json" } }
+                );
+                if (!response.ok) throw new Error("Location lookup failed");
+
+                const data = await response.json();
+                const address = data.address || {};
+                const area = address.suburb || address.town || address.city || address.village || address.municipality || address.county;
+                const province = address.state || address.region;
+                const place = [area, province].filter(Boolean).join(", ");
+                display.textContent = place
+                    ? `${place} (GPS ±${Math.round(accuracy || 0)}m)`
+                    : `${coordinates} (GPS ±${Math.round(accuracy || 0)}m)`;
+            } catch (error) {
+                console.warn("Reverse-geocoding failed:", error);
+                display.textContent = `${coordinates} (GPS ±${Math.round(accuracy || 0)}m)`;
+            }
+        }
+
         function trackImmediateLocation() {
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(pos => {
                     driverLat = pos.coords.latitude;
                     driverLng = pos.coords.longitude;
+                    updateCurrentLocationName(driverLat, driverLng, pos.coords.accuracy);
                     
                     const userIcon = L.divIcon({ className: 'user-location-icon', iconSize: [18, 18] });
                     if (!driverGpsMarker) {
@@ -1887,6 +1933,7 @@ async function generateNewPasscode() {
                     driverLat = pos.coords.latitude;
                     driverLng = pos.coords.longitude;
                     lastGpsAccuracy = accuracy;
+                    updateCurrentLocationName(driverLat, driverLng, accuracy);
                     pill.textContent = "Live Online";
                     pill.className = "driver-status-pill online";
 
