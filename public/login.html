@@ -2205,15 +2205,19 @@
                         );
 
 
-                    const data =
-                        await response.json();
+                    const responseText = await response.text();
+                    let data = {};
+
+                    try {
+                        data = responseText ? JSON.parse(responseText) : {};
+                    } catch (parseError) {
+                        throw new Error(
+                            `Registration server returned ${response.status}: ${responseText.slice(0, 180) || "Empty response"}`
+                        );
+                    }
 
 
                     if (response.ok) {
-
-                        if (!data.token) {
-                            throw new Error("The server did not return an authentication token.");
-                        }
 
                         showMsg(
                             message,
@@ -2248,12 +2252,9 @@
 
                     }
                     else {
-
-                        showMsg(
-                            message,
+                        throw new Error(
                             data.message ||
-                            "Registration failed.",
-                            "error"
+                            `Registration failed (HTTP ${response.status}).`
                         );
 
                     }
@@ -2268,7 +2269,7 @@
 
                     showMsg(
                         message,
-                        "Unable to connect to TaxiFlow server.",
+                        error.message || "Unable to connect to TaxiFlow server.",
                         "error"
                     );
 
