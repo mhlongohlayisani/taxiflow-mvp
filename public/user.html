@@ -637,18 +637,17 @@ async function updateOnlineDriversList(driversList = null){
         try{const r=await apiFetch(`${API_BASE}/api/drivers/live?fresh=${Date.now()}`,{cache:'no-store'}),d=await r.json();driversList=d.drivers||[];}catch(e){driversList=[];}
     }
     lastDriversPayload=driversList;
-    if(!commuterGpsReady){
-        badge.textContent='Locating…';
-        panelBody.innerHTML=`<small style="color:#64748b;text-align:center;padding:14px;line-height:1.5">📍 ${escapeHtml(commuterGpsError||'Getting an accurate GPS position before calculating distance…')}</small>`;
-        return;
-    }
     const active = driversList.filter(isUsableLiveDriver).map(x=>{
-        const distKm = calculateDistance(commuterLat,commuterLng,Number(x.latitude),Number(x.longitude));
-        const estMins = Math.max(1, Math.round((distKm / 30) * 60));
-        const distanceLabel=distKm<1?`${Math.max(0,Math.round(distKm*1000))} m`:`${distKm.toFixed(1)} km`;
+        const distKm = commuterGpsReady
+            ? calculateDistance(commuterLat,commuterLng,Number(x.latitude),Number(x.longitude))
+            : null;
+        const estMins = distKm === null ? null : Math.max(1, Math.round((distKm / 30) * 60));
+        const distanceLabel = distKm === null
+            ? 'Locating…'
+            : (distKm<1?`${Math.max(0,Math.round(distKm*1000))} m`:`${distKm.toFixed(1)} km`);
         return {...x,distKm,estMins,distanceLabel};
     });
-    active.sort((a,b)=>a.distKm - b.distKm);
+    if(commuterGpsReady) active.sort((a,b)=>a.distKm - b.distKm);
     badge.textContent=`${active.length} online`;
     if(!active.length){panelBody.innerHTML=`<small style="color:#94a3b8; text-align:center; padding:10px;">No drivers online right now.</small>`;return;}
     panelBody.innerHTML = active.map(d=>`
@@ -658,7 +657,7 @@ async function updateOnlineDriversList(driversList = null){
                     <b>🚖 Taxi Heading to ${escapeHtml(d.destination||'Not Specified')}</b>
                     <small style="display:block;">Status: <b style="color:${d.is_full?'#dc2626':'#16a34a'}">${d.is_full?'FULL':'NOT FULL'}</b></small>
                 </div>
-                <span style="background:#eafbf1; color:#15803d; padding:2px 6px; border-radius:4px; font-weight:800; font-size:11px;">${d.distanceLabel} (~${d.estMins}m)</span>
+                <span style="background:#eafbf1; color:#15803d; padding:2px 6px; border-radius:4px; font-weight:800; font-size:11px;">${d.distanceLabel}${d.estMins === null ? '' : ` (~${d.estMins}m)`}</span>
             </div>
             <button onclick="showDriverDirection(${d.latitude}, ${d.longitude})" style="background:#16a34a;color:#fff;border:0;padding:6px;border-radius:6px;font-weight:700;font-size:11px;cursor:pointer">🧭 See Direction Coming From</button>
         </div>
