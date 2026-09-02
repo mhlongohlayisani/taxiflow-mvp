@@ -1,0 +1,1192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>TaxiFlow | Commuter Dashboard</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css">
+<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;background:#f3f4f6;color:#111827;overflow:hidden;height:100vh;width:100vw}.top-nav{position:absolute;top:20px;left:20px;right:20px;z-index:9999;display:flex;justify-content:space-between;align-items:center;pointer-events:none}.nav-left{display:flex;align-items:center;gap:15px;pointer-events:auto}.hamburger-btn{background:#111827;color:#fff;border:0;width:50px;height:50px;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer;box-shadow:0 10px 25px #0003}.hamburger-line{width:22px;height:3px;background:#fff;border-radius:2px}.brand{background:#111827;padding:10px 22px;border-radius:12px;box-shadow:0 10px 25px #0003;display:flex;flex-direction:column;border-bottom:4px solid #16a34a}.brand h1{color:#fff;font-size:22px;font-weight:900}.brand h1 span{color:#22c55e}.brand p{color:#9ca3af;font-size:11px}.user-pill{background:#111827;color:#fff;padding:10px 20px;border-radius:12px;font-weight:700;font-size:14px;box-shadow:0 10px 25px #0003;pointer-events:auto;border-bottom:4px solid #16a34a}.sidebar-drawer{position:fixed;top:0;left:-320px;width:300px;height:100vh;background:#0b1220;color:#fff;z-index:10000;box-shadow:10px 0 30px #0008;transition:left .3s;display:flex;flex-direction:column;padding:24px;overflow-y:auto}.sidebar-drawer.open{left:0}.sidebar-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:25px;border-bottom:1px solid #ffffff1a;padding-bottom:15px;font-size:20px;font-weight:800}.sidebar-header span{color:#16a34a}.sidebar-close{background:none;border:0;color:#9ca3af;font-size:24px;cursor:pointer}.sidebar-menu{display:flex;flex-direction:column;gap:10px;flex:1}.sidebar-link{background:#ffffff0a;color:#d1d5db;text-decoration:none;padding:14px 16px;border-radius:12px;font-weight:600;font-size:14px;display:flex;align-items:center;gap:12px;cursor:pointer;border:1px solid #ffffff0d}.sidebar-link:hover{background:#16a34a;color:#fff}.sidebar-overlay{position:fixed;inset:0;background:#0008;backdrop-filter:blur(3px);z-index:9999;opacity:0;pointer-events:none;transition:.3s}.sidebar-overlay.show{opacity:1;pointer-events:all}#map{width:100vw;height:100vh;position:absolute;inset:0;z-index:1}.home-search-container{position:absolute;top:90px;left:50%;transform:translateX(-50%);z-index:9998;background:#111827f2;backdrop-filter:blur(10px);padding:12px 18px;border-radius:50px;box-shadow:0 15px 35px #0005;display:flex;gap:10px;align-items:center;max-width:500px;width:calc(100vw - 40px)}.home-search-input{flex:1;background:transparent;border:0;color:#fff;font-size:14px;outline:0}.home-search-input::placeholder{color:#9ca3af}.search-places-container{position:absolute;top:90px;left:20px;z-index:9998;background:#111827f2;padding:10px 14px;border-radius:14px;display:none;gap:8px;max-width:400px;width:calc(100vw - 40px)}.search-places-container.show{display:flex}.search-places-input{flex:1;background:#ffffff12;border:1px solid #ffffff22;padding:8px 12px;border-radius:8px;color:#fff;outline:0}.search-places-btn{background:#16a34a;color:#fff;border:0;padding:8px 14px;border-radius:8px;font-weight:700;cursor:pointer}.action-bar{position:absolute;bottom:30px;left:50%;transform:translateX(-50%);z-index:9999;background:#111827f2;padding:8px;border-radius:50px;display:none;gap:8px;box-shadow:0 15px 35px #0005;align-items:center}.action-bar.show{display:flex}.action-btn{background:transparent;color:#fff;border:0;padding:10px 18px;border-radius:40px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap}.action-btn:hover,.action-btn.active{background:#16a34a}.rank-map-badge{background:#111827;color:#fff;padding:4px 10px;border-radius:8px;font-size:12px;font-weight:800;box-shadow:0 4px 12px #0005;border:2px solid #16a34a;white-space:nowrap}.vehicle-icon{font-size:24px;filter:drop-shadow(0 4px 4px #0008)}.user-location-icon{background:#3b82f6;border:3px solid #fff;border-radius:50%;box-shadow:0 0 0 4px #3b82f666;animation:pulse 2s infinite}@keyframes pulse{0%{box-shadow:0 0 0 0 #3b82f6b3}70%{box-shadow:0 0 0 15px #3b82f600}100%{box-shadow:0 0 0 0 #3b82f600}}#liveStatusBadge{display:none;position:absolute;top:100px;left:20px;z-index:9998;background:#16a34a;color:#fff;padding:10px 18px;border-radius:14px;box-shadow:0 10px 25px #16a34a66;font-weight:800;font-size:13px;align-items:center;gap:10px}
+
+/* ONLINE DRIVERS SIDE PANEL */
+.online-drivers-panel{position:absolute;top:155px;right:20px;width:320px;max-height:calc(100vh - 240px);background:rgba(255,255,255,0.95);backdrop-filter:blur(12px);border-radius:16px;box-shadow:0 10px 25px rgba(0,0,0,0.15);border:1px solid #e2e8f0;z-index:1350;display:none;flex-direction:column;overflow:hidden}.online-drivers-panel.show{display:flex}.online-drivers-header{background:#0b1220;color:#fff;padding:12px 16px;font-size:13px;font-weight:800;display:flex;justify-content:space-between;align-items:center}.online-drivers-body{padding:10px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;max-height:300px}.driver-card-item{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px;font-size:12px;display:flex;flex-direction:column;gap:6px}.driver-card-item b{color:#0b1220;font-size:13px}.driver-card-item small{color:#64748b}
+
+/* BULLETPROOF CAMERA OVERRIDE */
+.qr-camera-box {
+    background: #0b1220;
+    padding: 10px;
+    border-radius: 12px;
+    text-align: center;
+    margin-bottom: 15px;
+
+    /* This prevents Flexbox from squeezing the scanner */
+    flex: 0 0 auto;
+    overflow: hidden;
+}
+
+#qr-reader {
+    position: relative !important;
+    width: 100% !important;
+    height: 280px !important;
+    min-height: 280px !important;
+    flex-shrink: 0 !important;
+    background: #0b1220 !important;
+    border-radius: 10px !important;
+    overflow: hidden !important;
+}
+
+#qr-reader__scan_region {
+    width: 100% !important;
+    height: 280px !important;
+    min-height: 280px !important;
+}
+
+#qr-reader video {
+    width: 100% !important;
+    height: 280px !important;
+    object-fit: cover !important;
+    border-radius: 10px !important;
+}
+
+.camera-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 8px;
+}
+.ai-chat-btn{position:absolute;bottom:100px;right:25px;z-index:9999;background:#111827;color:#fff;width:60px;height:60px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 10px 25px #0005;border:2px solid #22c55e}.ai-chat-panel{position:absolute;bottom:175px;right:25px;width:380px;background:#fff;border-radius:16px;box-shadow:0 15px 40px #0004;z-index:9999;display:none;flex-direction:column;overflow:hidden}.ai-chat-header{background:#111827;color:#fff;padding:16px;font-weight:900;display:flex;justify-content:space-between;align-items:center}.ai-chat-header span{color:#22c55e}.ai-chat-messages{height:280px;overflow:auto;padding:16px;display:flex;flex-direction:column;gap:12px;font-size:14px;background:#f9fafb}.msg-bot{background:#e5e7eb;color:#111827;padding:12px;border-radius:12px 12px 12px 0;max-width:85%;align-self:flex-start}.msg-user{background:#16a34a;color:#fff;padding:12px;border-radius:12px 12px 0 12px;max-width:85%;align-self:flex-end}.ai-chat-input-area{display:flex;padding:12px;border-top:1px solid #e5e7eb;flex-direction:column;gap:8px}.ai-chat-input-row{display:flex;width:100%}.ai-chat-input-row input{flex:1;padding:10px 14px;border:1px solid #d1d5db;border-radius:8px;outline:0}.ai-chat-input-row button{background:#16a34a;color:#fff;border:0;padding:0 14px;margin-left:6px;border-radius:8px;font-weight:700;cursor:pointer}.bot-option-btn{background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd;padding:8px 12px;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;text-align:left;display:block;width:100%;margin-top:6px}.bot-option-btn:hover{background:#bae6fd}
+.modal{display:none;position:fixed;inset:0;background:#0009;backdrop-filter:blur(5px);z-index:99999;align-items:center;justify-content:center;padding:20px}.modal-box{background:#fff;width:100%;max-width:600px;border-radius:24px;box-shadow:0 25px 50px #0004;overflow:hidden;max-height:90vh;display:flex;flex-direction:column}.modal-head{background:#0b1220;color:#fff;padding:20px 24px;display:flex;justify-content:space-between;align-items:center}.modal-body{padding:24px;overflow:auto;display:flex;flex-direction:column;gap:16px}.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:10px}.gallery img{width:100%;height:90px;object-fit:cover;border-radius:10px;cursor:pointer}.mode-btn{background:#f3f4f6;border:1px solid #e5e7eb;padding:12px 16px;border-radius:12px;font-weight:700;text-align:left;cursor:pointer}.mode-btn:hover{background:#dcfce7;border-color:#16a34a}.nav-card{position:absolute;bottom:30px;left:50%;transform:translateX(-50%);z-index:10000;background:#fff;width:90%;max-width:480px;border-radius:28px;box-shadow:0 20px 40px #0005;padding:22px;display:none;flex-direction:column;gap:14px}.nav-card button{border:0;padding:14px;border-radius:15px;font-weight:900;cursor:pointer}.leaflet-routing-container{display:none!important}@media(max-width:600px){.brand{display:none}.user-pill{padding:9px 12px}.action-bar{max-width:95%;overflow:auto}.action-btn{padding:9px 12px}.ai-chat-panel{right:12px;width:calc(100vw - 24px)}.ai-chat-btn{right:15px}.online-drivers-panel{left:15px;right:15px;width:auto}}
+</style>
+</head>
+<body>
+<div id="liveStatusBadge"><span>🟢 YOU ARE LIVE — <span id="liveDestDisplay">Destination</span></span><button onclick="cancelLiveCommuter()" style="background:#fff;color:#dc2626;border:0;padding:4px 8px;border-radius:6px;font-weight:800;cursor:pointer">Cancel</button></div>
+
+<div class="online-drivers-panel" id="onlineDriversPanel">
+    <div class="online-drivers-header">
+        <span>🚐 Online Drivers Nearby</span>
+        <span id="driverCountBadge" style="background:#16a34a; padding:2px 6px; border-radius:6px; font-size:11px;">0 online</span>
+    </div>
+    <div class="online-drivers-body" id="onlineDriversBody">
+        <small style="color:#94a3b8; text-align:center; padding:10px;">Scanning online drivers...</small>
+    </div>
+</div>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+<div class="sidebar-drawer" id="sidebarDrawer">
+    <div class="sidebar-header"><div>Taxi<span>Flow</span> Menu</div><button class="sidebar-close" onclick="toggleSidebar()">✕</button></div>
+    <div class="sidebar-menu">
+    <a href="#" onclick="selectMenu('home');toggleSidebar();return false" class="sidebar-link">🏠 Home Dashboard</a>
+    <a href="#" onclick="selectMenu('taxi');toggleSidebar();return false" class="sidebar-link">🚐 Taxi Info & Live Taxis</a>
+    <a href="#" onclick="selectMenu('bus');toggleSidebar();return false" class="sidebar-link">🚌 Buses Info</a>
+    <a href="#" onclick="selectMenu('search');toggleSidebar();return false" class="sidebar-link">🔍 Search Ranks by Place</a>
+    <a href="#" onclick="openVerifyModal();toggleSidebar();return false" class="sidebar-link" style="color:#38bdf8">🔍 Verify Taxi / Number Plate</a>
+    <a href="#" onclick="openScanEarnModal();toggleSidebar();return false" class="sidebar-link" style="color:#22c55e">📷 Scan QR Code to Earn Points</a>
+    <a href="#" onclick="logout();return false" class="sidebar-link" style="margin-top:auto;background:#ef44441a;color:#f87171">🚪 Sign Out</a>
+</div>
+</div>
+<div class="top-nav"><div class="nav-left"><button class="hamburger-btn" onclick="toggleSidebar()"><div class="hamburger-line"></div><div class="hamburger-line"></div><div class="hamburger-line"></div></button><div class="brand"><h1>Taxi<span>Flow</span></h1><p>Live Route & Rank Mapping</p></div></div><div style="display:flex; gap:10px;">
+    <div class="points-pill">🪙 <span id="commuterPointsDisplay">0</span> pts</div>
+    <div class="user-pill"><span style="color:#22c55e">●</span> <span id="userNameDisplay">Commuter</span></div>
+</div></div>
+<div class="home-search-container" id="homeSearchBox"><span style="color:#9ca3af">⌕</span><input id="homeSearchInput" class="home-search-input" placeholder="Search where you wanna go..." onkeydown="if(event.key==='Enter')searchHomeDestination()"><button onclick="searchHomeDestination()" style="background:#16a34a;color:#fff;border:0;border-radius:20px;padding:8px 12px;font-weight:800;cursor:pointer">Go</button></div>
+<div class="search-places-container" id="searchPlacesBox"><input id="placeSearchInput" class="search-places-input" placeholder="Search place (e.g. Mankweng)..." onkeydown="if(event.key==='Enter')searchRanksByPlace()"><button class="search-places-btn" onclick="searchRanksByPlace()">Search</button></div>
+<div class="action-bar" id="actionBar"></div>
+<div id="map" style="width: 100vw; height: 100vh; position: absolute; inset: 0; z-index: 1;"></div>
+
+<!-- SERVICE BOT & VOICE ASSISTANT CHAT PANEL -->
+<div class="ai-chat-btn" onclick="toggleChat()">🤖</div>
+<div class="ai-chat-panel" id="aiChatPanel">
+    <div class="ai-chat-header">
+        <div id="assistantTitleHeader">TaxiFlow Assistant</div>
+        <div style="display:flex; gap:10px; align-items:center;">
+            <button id="voiceToggleBtn" onclick="toggleVoiceMode()" style="background:#16a34a; color:#fff; border:0; padding:4px 8px; border-radius:6px; font-size:11px; font-weight:800; cursor:pointer">🔊 Voice: OFF</button>
+            <div onclick="toggleChat()" style="cursor:pointer; font-size:16px;">✕</div>
+        </div>
+    </div>
+    <div class="ai-chat-messages" id="chatMessages">
+        <div class="msg-bot" id="botWelcomeMsg">
+            Sawubona! Welcome to TaxiFlow. Please choose an option or activate voice assistant:
+            <button class="bot-option-btn" onclick="handleBotOption(1)">1️⃣ Nearest Taxi Rank</button>
+            <button class="bot-option-btn" onclick="handleBotOption(2)">2️⃣ Live Taxis & Destination</button>
+            <button class="bot-option-btn" onclick="handleBotOption(3)">3️⃣ Bus Information</button>
+            <button class="bot-option-btn" onclick="handleBotOption(4)">4️⃣ Report Driver</button>
+        </div>
+    </div>
+    <div class="ai-chat-input-area">
+        <div style="display:flex; gap:5px; margin-bottom:6px; align-items:center;">
+            <label style="font-size:11px; font-weight:700; color:#475569;">Voice Type:</label>
+            <select id="voiceGenderSelect" onchange="changeVoiceGender()" style="flex:1; padding:4px; font-size:11px; border-radius:6px; border:1px solid #cbd5e1;">
+                <option value="female" selected>Female Voice</option>
+                <option value="male">Male Voice</option>
+            </select>
+        </div>
+        <div class="ai-chat-input-row">
+            <input id="chatInput" placeholder="Type or speak option..." onkeydown="if(event.key==='Enter')sendBotMessage()">
+            <button id="micBtn" onclick="startVoiceListening()" style="background:#3b82f6; display:none;" title="Speak option">🎙️</button>
+            <button onclick="sendBotMessage()">Send</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="ranksListModal"><div class="modal-box"><div class="modal-head"><div><h2 id="ranksModalTitle">Taxi Ranks Directory</h2><p style="font-size:12px;color:#22c55e">TaxiFlow South Africa</p></div><button onclick="closeModal('ranksListModal')" style="background:none;border:0;color:#9ca3af;font-size:24px;cursor:pointer">✕</button></div><div id="ranksDirectoryContainer" class="modal-body" style="background:#f9fafb"></div></div></div>
+<div class="modal" id="rankDetailModal"><div class="modal-box"><div class="modal-head"><h2 id="modalRankName">Taxi Rank Details</h2><button onclick="closeRankModal()" style="background:none;border:0;color:#9ca3af;font-size:24px;cursor:pointer">✕</button></div><div class="modal-body"><span id="modalRankStatus" style="width:max-content;padding:6px 12px;border-radius:999px;font-size:12px;font-weight:800">STATUS</span><div><b style="font-size:12px;color:#64748b">ADDRESS / LOCATION</b><p id="modalRankAddress"></p></div><div><b style="font-size:12px;color:#64748b">DESCRIPTION & ROUTES</b><p id="modalRankDesc" style="color:#4b5563;line-height:1.5"></p></div><div><b style="font-size:12px;color:#64748b">RANK PHOTOS</b><div id="modalPhotoGallery" class="gallery"></div></div><button id="goToRankBtn" style="background:#16a34a;color:#fff;width:100%;padding:14px;border:0;border-radius:12px;font-weight:900;cursor:pointer">🧭 GO — Start Navigation</button></div></div></div>
+<div class="modal" id="transportModeModal"><div class="modal-box" style="max-width:420px"><div class="modal-head"><h2>Select Transport Mode</h2><button onclick="closeModal('transportModeModal')" style="background:none;border:0;color:#9ca3af;font-size:24px">✕</button></div><div class="modal-body"><p style="color:#64748b">How are you travelling?</p><button class="mode-btn" onclick="startNavigationWithMode('car')">🚗 Car / Taxi</button><button class="mode-btn" onclick="startNavigationWithMode('walk')">🚶 Walking</button><button class="mode-btn" onclick="startNavigationWithMode('bike')">🚲 Bicycle</button><button class="mode-btn" onclick="startNavigationWithMode('bus')">🚌 Bus / Train</button></div></div></div>
+<div class="modal" id="goLiveModal"><div class="modal-box" style="max-width:420px"><div class="modal-head"><h2>Go Live to Drivers</h2><button onclick="closeModal('goLiveModal')" style="background:none;border:0;color:#9ca3af;font-size:24px">✕</button></div><div class="modal-body"><p style="color:#64748b">Drivers nearby will see your live position and destination.</p><input id="commuterDestInput" placeholder="e.g. Mankweng / Turfloop" style="padding:13px;border:1px solid #d1d5db;border-radius:10px;outline:0"><button onclick="confirmGoLive()" style="background:#16a34a;color:#fff;border:0;padding:13px;border-radius:10px;font-weight:800">Confirm Go Live</button></div></div></div>
+
+<div class="modal" id="verifyTaxiModal">
+    <div class="modal-box" style="max-width:420px">
+        <div class="modal-head">
+            <h2>🔍 Verify Official Taxi / Bus</h2>
+            <button onclick="closeModal('verifyTaxiModal')" style="background:none;border:0;color:#9ca3af;font-size:24px">✕</button>
+        </div>
+        <div class="modal-body">
+            <p style="color:#64748b; font-size:14px;">Enter the vehicle registration / number plate to check if it's an official ranking and approved vehicle.</p>
+            <input id="verifyPlateInput" placeholder="e.g. CA 123-456 or REG" style="width:100%; padding:14px; border:1px solid #d1d5db; border-radius:10px; outline:0; font-weight:800; font-size:16px; text-transform:uppercase; margin-bottom:12px;">
+            <button onclick="checkVehicleRegistration()" style="background:#2563eb; color:#fff; border:0; width:100%; padding:14px; border-radius:10px; font-weight:800; cursor:pointer;">Scan / Verify Registration</button>
+            <div id="verifyResultContainer" style="margin-top:15px; display:none;"></div>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="scanPointsModal">
+    <div class="modal-box" style="max-width:480px">
+        <div class="modal-head">
+            <h2>🪙 Scan QR & Earn Points</h2>
+            <button onclick="closeScanModal()" style="background:none;border:0;color:#9ca3af;font-size:24px;cursor:pointer">✕</button>
+        </div>
+        <div class="modal-body">
+            <p style="color:#64748b; font-size:14px; margin-bottom:12px;">Scan the QR code in the taxi, then enter the driver's daily passcode to earn points.</p>
+
+            <!-- CAMERA SCANNER -->
+            <!-- CAMERA SCANNER -->
+<div class="qr-camera-box">
+
+    <div id="qr-reader"></div>
+
+    <div class="camera-buttons">
+        <button onclick="switchCamera('environment')"
+                style="background:#16a34a;color:#fff;border:0;padding:6px 12px;border-radius:6px;font-weight:700;font-size:11px;cursor:pointer;">
+            📷 Back Camera
+        </button>
+
+        <button onclick="switchCamera('user')"
+                style="background:#3b82f6;color:#fff;border:0;padding:6px 12px;border-radius:6px;font-weight:700;font-size:11px;cursor:pointer;">
+            🤳 Front Camera
+        </button>
+    </div>
+
+</div>
+
+            <!-- DRIVER ID & PASSCODE INPUT -->
+            <label style="font-size:12px; font-weight:800; color:#334155; display:block; margin-bottom:6px;">SCANNED DRIVER ID:</label>
+            <input id="scanDriverIdInput" readonly placeholder="Waiting for camera scan..." style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:8px; margin-bottom:15px; background:#f3f4f6; color:#64748b; font-weight:700;">
+
+            <label style="font-size:12px; font-weight:800; color:#334155; display:block; margin-bottom:6px;">ENTER DAILY PASSCODE:</label>
+            <input id="scanPasscodeInput" placeholder="e.g. 5892" style="width:100%; padding:14px; border:1px solid #d1d5db; border-radius:10px; font-weight:900; font-size:20px; text-align:center; letter-spacing:8px; margin-bottom:20px; outline:0;">
+
+            <button id="verifyPasscodeBtn" onclick="submitScanPasscode()" style="background:#f59e0b; color:#fff; border:0; width:100%; padding:14px; border-radius:10px; font-weight:900; cursor:pointer;">Verify & Claim Points</button>
+        </div>
+    </div>
+</div>
+
+                <label style="font-size:13px; font-weight:700; color:#334155; display:block; margin-bottom:6px;">Vehicle Registration / Number Plate:</label>
+                <input id="scanRegInput" placeholder="e.g. ABC 123 LB" style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:8px; margin-bottom:15px; font-weight:700; text-transform:uppercase;">
+                <button onclick="verifyDriverQR()" style="background:#16a34a; color:#fff; border:0; width:100%; padding:14px; border-radius:10px; font-weight:800; cursor:pointer;">Verify & Continue ➔</button>
+            </div>
+
+            <div id="reportStepForm" style="display:none;">
+                <div style="background:#dcfce7; color:#166534; padding:10px 14px; border-radius:8px; font-size:13px; font-weight:700; margin-bottom:15px;">
+                    ✓ Verified Vehicle: <span id="verifiedVehicleDisplay">---</span>
+                </div>
+                
+                <label style="font-size:13px; font-weight:700; color:#334155; display:block; margin-bottom:6px;">Select Primary Issue / Violation:</label>
+                <select id="reportViolationType" style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:8px; margin-bottom:15px; font-weight:600;">
+                    <option value="Reckless / Clueless Driving">🏎️ Reckless or Clueless Driving</option>
+                    <option value="Verbal Abuse / Insults">🗣️ Verbal Abuse / Insulting Commuters</option>
+                    <option value="Speeding">⚡ Dangerous Speeding</option>
+                    <option value="Overloading">👥 Dangerous Overloading</option>
+                    <option value="Unroadworthy Vehicle">🛠️ Unroadworthy Vehicle / Faulty Parts</option>
+                    <option value="Other Safety Issue">⚠️ Other Safety Concern</option>
+                </select>
+
+                <label style="font-size:13px; font-weight:700; color:#334155; display:block; margin-bottom:6px;">Detailed Description:</label>
+                <textarea id="reportDescription" placeholder="Describe what happened, exact location, or time..." style="width:100%; height:90px; padding:10px; border:1px solid #d1d5db; border-radius:8px; margin-bottom:15px; outline:0;"></textarea>
+
+                <label style="font-size:13px; font-weight:700; color:#334155; display:block; margin-bottom:6px;">Attach Evidence (Photos / Audio / Video):</label>
+                <input type="file" id="reportEvidenceFile" accept="image/*,video/*,audio/*" style="width:100%; padding:8px; border:1px solid #d1d5db; border-radius:8px; margin-bottom:20px; font-size:12px;">
+
+                <button onclick="submitDriverReport()" style="background:#dc2626; color:#fff; border:0; width:100%; padding:14px; border-radius:10px; font-weight:800; cursor:pointer;">🚨 Submit Report to Rank Marshals</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- BOT NAMING MODAL -->
+<div class="modal" id="botNamingModal" style="display:none; z-index:999999;">
+    <div class="modal-box" style="max-width:400px">
+        <div class="modal-head">
+            <h2>🤖 Name Your Assistant</h2>
+        </div>
+        <div class="modal-body">
+            <p style="color:#64748b; font-size:14px;">Give your voice assistant a unique name so it only responds when you call it (e.g., "Sipho", "Zola", "TaxiBie").</p>
+            <input id="customBotNameInput" placeholder="Enter assistant name..." style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:8px; font-weight:700; margin-bottom:15px; outline:0;">
+            <button onclick="saveCustomBotName()" style="background:#16a34a; color:#fff; border:0; width:100%; padding:14px; border-radius:10px; font-weight:800; cursor:pointer;">Save Assistant Name</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="imageLightbox" style="background:#000f"><button onclick="closeLightbox()" style="position:absolute;top:25px;right:25px;background:#fff3;color:#fff;border:0;width:45px;height:45px;border-radius:50%;font-size:20px">✕</button><img id="lightboxImg" style="max-width:90%;max-height:85vh;border-radius:12px;object-fit:contain"></div>
+<div class="nav-card" id="activeNavBottomCard"><div style="display:flex;justify-content:space-between"><div><span id="navArrivalTime" style="font-size:26px;font-weight:900">--:--</span> <span id="navTravelTime" style="font-weight:700;color:#4b5563">-- min</span></div><span id="navTravelDist" style="font-weight:700;color:#4b5563">-- km</span></div><div style="background:#f8fafc;border:1px solid #e2e8f0;padding:12px;border-radius:14px"><b id="navDestinationTitle">Destination</b><div id="navInstructionText" style="margin-top:5px;color:#475569;font-size:13px">Calculating route...</div></div><button onclick="stopNavigation()" style="background:#dc2626;color:#fff">End Route</button></div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+<script>
+const API_BASE="http://localhost:3000";let map,rankLayer,vehicleLayer,liveDriverLayer,taxiRoadsLayer,userMarker,currentRouteControl=null,currentMode='home',allRanksCache=[],commuterLat=-23.8333,commuterLng=30.1667,pendingDestLat=null,pendingDestLng=null,pendingRankName='',watchId=null,activeRouteSteps=[],currentRouteIndex=0,isNavigating=false;
+let reportTransportType = 'TAXI';
+let verifiedDriverData = null;
+let html5QrCode = null;
+let currentFacingMode = "environment";
+let voiceModeActive = false;
+let recognition = null;
+let isListeningActive = false;
+let isAssistantSpeaking = false; 
+let commuterPoints = 0;
+
+// Conversational State Machine variables
+let botState = 'STANDBY'; 
+let listedRanks = [];
+let selectedRankObj = null;
+let customBotName = "Sipho";
+let voiceGender = "female";
+
+function getLoggedInUser(){for(const k of ['user','currentUser','taxiflow_user','taxiflowUser','loggedInUser']){const s=localStorage.getItem(k);if(s)try{return JSON.parse(s)}catch(e){}}return null}const currentUser=getLoggedInUser();
+function escapeHtml(v){return String(v??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;')}
+function closeModal(id){document.getElementById(id).style.display='none'}function toggleSidebar(){document.getElementById('sidebarDrawer').classList.toggle('open');document.getElementById('sidebarOverlay').classList.toggle('show')}
+
+async function init(){
+    if(currentUser){
+        document.getElementById('userNameDisplay').textContent = currentUser.name || currentUser.full_name || currentUser.username || 'Commuter';
+        await loadCommuterPoints(); // Fetch actual points from database on startup
+    }
+    
+    const street=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:21,attribution:'© OpenStreetMap contributors'});
+    const sat=L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}',{maxZoom:21,attribution:'Google'});
+    map=L.map('map',{zoomControl:false,layers:[street]}).setView([commuterLat,commuterLng],13);
+    L.control.layers({'🗺️ Street':street,'🛰️ Satellite':sat},null,{position:'topright'}).addTo(map);
+    L.control.zoom({position:'bottomright'}).addTo(map);
+    rankLayer=L.layerGroup().addTo(map);
+    vehicleLayer=L.layerGroup().addTo(map);
+    liveDriverLayer=L.layerGroup().addTo(map);
+    taxiRoadsLayer=L.layerGroup().addTo(map);
+    
+    if(navigator.geolocation)navigator.geolocation.getCurrentPosition(p=>{commuterLat=p.coords.latitude;commuterLng=p.coords.longitude;const ic=L.divIcon({className:'user-location-icon',iconSize:[18,18]});userMarker=L.marker([commuterLat,commuterLng],{icon:ic}).addTo(map).bindPopup('<b>You are here</b>');map.setView([commuterLat,commuterLng],16)},()=>{}, {enableHighAccuracy:true});
+    selectMenu('home');preloadRanks();scanActiveDrivers();setInterval(scanActiveDrivers,2000);
+    
+    initSpeechRecognition();
+    await loadUserInteractionPreference();
+}
+
+async function preloadRanks(){try{const r=await fetch(`${API_BASE}/api/ranks`),d=await r.json();if(d.success)allRanksCache=d.ranks||[]}catch(e){console.warn(e)}}
+
+function selectMenu(mode){
+    currentMode=mode;
+    document.getElementById('actionBar').classList.remove('show');
+    document.getElementById('searchPlacesBox').classList.remove('show');
+    const panel=document.getElementById('onlineDriversPanel');
+    
+    if(mode==='home'){
+        loadRanksOnMap();
+        panel.classList.remove('show');
+        taxiRoadsLayer.clearLayers();
+    }
+    if(mode==='taxi'){
+        const b=document.getElementById('actionBar');
+        b.innerHTML='<button class="action-btn active" onclick="scanNearbyTaxis()">🚕 Taxis Near Me</button><button class="action-btn" onclick="highlightTaxiRoads()">🛣️ Highlight Taxi Road</button><button class="action-btn" onclick="routeToNearestTaxiRoad()">📍 Nearest Taxi Road</button><button class="action-btn" onclick="openRanksDirectory()">🏢 Ranks</button><button class="action-btn" onclick="openVerifyModal()">🔍 Verify Taxi</button><button class="action-btn" onclick="promptGoLive()">📡 Go Live</button>';
+        b.classList.add('show');
+        loadLiveTaxisOnMap();
+        panel.classList.add('show');
+        updateOnlineDriversList();
+    }
+    if(mode==='bus'){
+        const b=document.getElementById('actionBar');
+        b.innerHTML='<button class="action-btn active" onclick="loadLiveBusesOnMap()">🚌 Live Buses</button><button class="action-btn" onclick="openRanksDirectory()">🏢 Bus Ranks</button><button class="action-btn" onclick="openVerifyModal()">🔍 Verify Bus</button>';
+        b.classList.add('show');
+        loadLiveBusesOnMap();
+        panel.classList.remove('show');
+        taxiRoadsLayer.clearLayers();
+    }
+    if(mode==='search'){
+        document.getElementById('searchPlacesBox').classList.add('show');
+        document.getElementById('placeSearchInput').focus();
+        loadRanksOnMap();
+        panel.classList.remove('show');
+        taxiRoadsLayer.clearLayers();
+    }
+}
+
+async function loadRanksOnMap(){
+    rankLayer.clearLayers();
+    try {
+        const typeParam = currentMode === 'bus' ? '?type=BUS' : '?type=TAXI';
+        const r = await fetch(`${API_BASE}/api/ranks${typeParam}`);
+        const d = await r.json();
+        if(d.success){
+            const ranks = d.ranks || [];
+            ranks.forEach(addRankMarker);
+        }
+    } catch(e){console.warn(e)}
+}
+
+
+
+function addRankMarker(r){
+    if(r.latitude==null||r.longitude==null)return;
+    const badgeText = currentMode === 'bus' ? '🚌 Bus Rank' : '🏢 Taxi Rank';
+    const ic=L.divIcon({className:'custom-rank-icon',html:`<div class="rank-map-badge">${badgeText}</div>`,iconSize:[110,30],iconAnchor:[55,15]});
+    L.marker([r.latitude,r.longitude],{icon:ic}).on('click',()=>openRankModal(r)).addTo(rankLayer);
+}
+
+// Fetches points directly from your Supabase database via your API
+async function loadCommuterPoints() {
+    if (!currentUser || !currentUser.id) return;
+    try {
+        const res = await fetch(`${API_BASE}/api/commuter/${currentUser.id}/points`);
+        const data = await res.json();
+        if (data.success) {
+            commuterPoints = data.points;
+            document.getElementById('commuterPointsDisplay').textContent = commuterPoints;
+        }
+    } catch(e) {
+        console.error('Failed to load points:', e);
+    }
+}
+
+// Sends a secure POST request to the backend to add points in Supabase
+// Opens the new Scan Modal and starts the camera
+function openScanEarnModal() {
+    document.getElementById('scanDriverIdInput').value = '';
+    document.getElementById('scanPasscodeInput').value = '';
+    document.getElementById('scanPointsModal').style.display = 'flex';
+    setTimeout(() => { initQrScanner(); }, 400);
+}
+
+function closeScanModal() {
+    stopQrScanner();
+    document.getElementById('scanPointsModal').style.display = 'none';
+}
+
+// Updated Camera Logic for Points
+function initQrScanner() {
+    const readerEl = document.getElementById('qr-reader');
+    if (!readerEl) return;
+    if (html5QrCode) stopQrScanner();
+    
+    html5QrCode = new Html5Qrcode("qr-reader");
+    const config = {
+    fps: 10,
+    aspectRatio: 1.333,
+    qrbox: function(viewfinderWidth, viewfinderHeight) {
+        const size = Math.min(viewfinderWidth, viewfinderHeight, 220);
+
+        return {
+            width: size,
+            height: size
+        };
+    }
+};
+    
+    html5QrCode.start(
+        { facingMode: currentFacingMode },
+        config,
+        (decodedText) => {
+            console.log("RAW QR CODE SCANNED:", decodedText); // <-- Check your browser F12 Console!
+            let lookupCode = decodedText;
+            try {
+                const parsed = JSON.parse(decodedText);
+                if (parsed.driver_id) lookupCode = parsed.driver_id;
+            } catch(e) {}
+
+            document.getElementById('scanDriverIdInput').value = lookupCode;
+            stopQrScanner(); // Turn off camera once scanned
+            alert('QR Code Scanned! Now enter the Driver Passcode.');
+        },
+        (errorMessage) => {}
+    ).catch(err => { console.warn("Camera error:", err); });
+}
+
+// Submit everything securely to your backend
+async function submitScanPasscode() {
+    if (!currentUser || !currentUser.id) {
+        alert('Please log in to earn points.');
+        return;
+    }
+
+    const driverId = document.getElementById('scanDriverIdInput').value.trim();
+    const passcode = document.getElementById('scanPasscodeInput').value.trim();
+
+    if (!driverId) { alert('Please scan the QR code first.'); return; }
+    if (!passcode) { alert('Please enter the passcode.'); return; }
+
+    const btn = document.getElementById('verifyPasscodeBtn');
+    const originalText = btn.textContent;
+    btn.textContent = "Verifying...";
+    btn.disabled = true;
+
+    try {
+        const res = await fetch(`${API_BASE}/api/commuter/${currentUser.id}/add-points`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                pointsToAdd: 10, 
+                driverId: driverId, 
+                passcode: passcode 
+            })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            commuterPoints = data.newTotal;
+            document.getElementById('commuterPointsDisplay').textContent = commuterPoints;
+            closeScanModal();
+            alert('Success! You earned 10 TaxiFlow Points! 🪙');
+        } else {
+            alert('Verification failed: ' + (data.message || 'Unknown error'));
+        }
+    } catch(e) {
+        alert('Network error. Could not verify passcode.');
+    } finally {
+        btn.textContent = originalText;
+        btn.disabled = false;
+    }
+}
+
+async function scanActiveDrivers(){
+    liveDriverLayer.clearLayers();
+    try{
+        const r=await fetch(`${API_BASE}/api/drivers/live`);
+        const d=await r.json();
+        if(currentMode==='taxi') updateOnlineDriversList(d.drivers||[]);
+        (d.drivers||[]).forEach(x=>{
+            if(x.latitude!=null&&x.longitude!=null&&x.show_on_map!==false){
+                const ic=L.divIcon({className:'vehicle-icon',html:'🚖',iconSize:[30,30],iconAnchor:[15,15]});
+                L.marker([x.latitude,x.longitude],{icon:ic}).bindPopup(`<b>🚖 Live Driver</b><br>Destination: <b>${escapeHtml(x.destination||'Not Specified')}</b><br>Status: <b style="color:${x.is_full?'#dc2626':'#16a34a'}">${x.is_full?'FULL':'NOT FULL'}</b>`).addTo(liveDriverLayer);
+            }
+        });
+    }catch(e){console.warn(e)}
+}
+
+async function updateOnlineDriversList(driversList = null){
+    const panelBody = document.getElementById('onlineDriversBody');
+    const badge = document.getElementById('driverCountBadge');
+    if(!driversList){
+        try{const r=await fetch(`${API_BASE}/api/drivers/live`),d=await r.json();driversList=d.drivers||[];}catch(e){driversList=[];}
+    }
+    const active = driversList.filter(x=>x.latitude!=null&&x.longitude!=null&&x.show_on_map!==false).map(x=>{
+        const distKm = calculateDistance(commuterLat, commuterLng, x.latitude, x.longitude);
+        const estMins = Math.max(1, Math.round((distKm / 30) * 60));
+        return {...x, distKm, estMins};
+    });
+    active.sort((a,b)=>a.distKm - b.distKm);
+    badge.textContent=`${active.length} online`;
+    if(!active.length){panelBody.innerHTML=`<small style="color:#94a3b8; text-align:center; padding:10px;">No drivers online right now.</small>`;return;}
+    panelBody.innerHTML = active.map(d=>`
+        <div class="driver-card-item">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                <div>
+                    <b>🚖 Taxi Heading to ${escapeHtml(d.destination||'Not Specified')}</b>
+                    <small style="display:block;">Status: <b style="color:${d.is_full?'#dc2626':'#16a34a'}">${d.is_full?'FULL':'NOT FULL'}</b></small>
+                </div>
+                <span style="background:#eafbf1; color:#15803d; padding:2px 6px; border-radius:4px; font-weight:800; font-size:11px;">${d.distKm.toFixed(1)} km (~${d.estMins}m)</span>
+            </div>
+            <button onclick="showDriverDirection(${d.latitude}, ${d.longitude})" style="background:#16a34a;color:#fff;border:0;padding:6px;border-radius:6px;font-weight:700;font-size:11px;cursor:pointer">🧭 See Direction Coming From</button>
+        </div>
+    `).join('');
+}
+
+function showDriverDirection(lat, lng){
+    if(currentRouteControl) map.removeControl(currentRouteControl);
+    currentRouteControl = L.Routing.control({
+        waypoints: [L.latLng(commuterLat, commuterLng), L.latLng(lat, lng)],
+        routeWhileDragging: false, addWaypoints: false, draggableWaypoints: false, showAlternatives: false, fitSelectedRoutes: true,
+        createMarker: (i,w)=>L.marker(w.latLng).bindPopup(i===0?'<b>You are here</b>':'<b>🚖 Online Driver Position</b>'),
+        lineOptions: { styles: [{ color: '#f59e0b', weight: 6, opacity: 0.85 }] }
+    }).addTo(map);
+    alert('Highlighted direction and path towards this driver on the map!');
+}
+
+/* MISSING BUTTON HANDLERS IMPLEMENTED BELOW */
+function loadLiveTaxisOnMap() {
+    currentMode = 'taxi';
+    loadRanksOnMap();
+    scanActiveDrivers();
+}
+
+function loadLiveBusesOnMap() {
+    currentMode = 'bus';
+    loadRanksOnMap();
+}
+
+function scanNearbyTaxis() {
+    scanActiveDrivers();
+    alert('Scanned nearby active taxis.');
+}
+
+async function highlightTaxiRoads() {
+    taxiRoadsLayer.clearLayers();
+    try {
+        const res = await fetch(`${API_BASE}/api/rank-admin/roads`);
+        const data = await res.json();
+        if (data.success && data.roads) {
+            data.roads.forEach(r => {
+                if (r.coordinates && Array.isArray(r.coordinates)) {
+                    L.polyline(r.coordinates, { color: '#22c55e', weight: 5, opacity: 0.8 }).addTo(taxiRoadsLayer);
+                }
+            });
+            alert('Highlighted taxi and transit roads.');
+        } else {
+            alert('No custom transit roads mapped yet.');
+        }
+    } catch(e) {
+        alert('Failed to load roads.');
+    }
+}
+
+async function routeToNearestTaxiRoad() {
+    try {
+        const res = await fetch(`${API_BASE}/api/rank-admin/roads`);
+        const data = await res.json();
+        if (data.success && data.roads && data.roads.length > 0) {
+            const firstRoad = data.roads[0];
+            if (firstRoad.coordinates && firstRoad.coordinates.length > 0) {
+                const pt = firstRoad.coordinates[0];
+                showDriverDirection(pt[0], pt[1]);
+                return;
+            }
+        }
+        alert('No mapped taxi routes available for routing.');
+    } catch(e) {
+        alert('Could not find nearest taxi road.');
+    }
+}
+
+async function openRanksDirectory() {
+    const modal = document.getElementById('ranksListModal');
+    const container = document.getElementById('ranksDirectoryContainer');
+    modal.style.display = 'flex';
+    container.innerHTML = '<p style="color:#64748b; text-align:center;">Loading ranks directory...</p>';
+
+    try {
+        const typeParam = currentMode === 'bus' ? '?type=BUS' : '?type=TAXI';
+        const res = await fetch(`${API_BASE}/api/ranks${typeParam}`);
+        const data = await res.json();
+        if (data.success && data.ranks) {
+            const ranks = data.ranks;
+            container.innerHTML = ranks.map(r => `
+                <div style="background:#fff; border:1px solid #e2e8f0; padding:14px; border-radius:12px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <b>${escapeHtml(r.name)}</b>
+                        <p style="font-size:12px; color:#64748b; margin-top:2px;">${escapeHtml(r.address || 'Local Rank')}</p>
+                    </div>
+                    <button onclick="closeModal('ranksListModal'); openRankModal(${JSON.stringify(r).replace(/"/g, '&quot;')})" style="background:#16a34a; color:#fff; border:0; padding:8px 12px; border-radius:8px; font-weight:700; cursor:pointer;">View Rank</button>
+                </div>
+            `).join('');
+        } else {
+            container.innerHTML = '<p style="text-align:center; color:#64748b;">No ranks found.</p>';
+        }
+    } catch(e) {
+        container.innerHTML = '<p style="text-align:center; color:#dc2626;">Failed to load directory.</p>';
+    }
+}
+
+function promptGoLive() {
+    document.getElementById('goLiveModal').style.display = 'flex';
+}
+
+function confirmGoLive() {
+    const dest = document.getElementById('commuterDestInput').value.trim();
+    if(!dest) { alert('Please enter your destination.'); return; }
+    document.getElementById('liveDestDisplay').textContent = dest;
+    document.getElementById('liveStatusBadge').style.display = 'flex';
+    closeModal('goLiveModal');
+    alert('You are now live to nearby drivers heading to ' + dest);
+}
+
+function cancelLiveCommuter() {
+    document.getElementById('liveStatusBadge').style.display = 'none';
+    alert('Go live cancelled.');
+}
+
+function openRankModal(r) {
+    document.getElementById('modalRankName').textContent = r.name;
+    document.getElementById('modalRankAddress').textContent = r.address || 'No address provided';
+    document.getElementById('modalRankDesc').textContent = r.description || 'Official ranked facility.';
+    const statusEl = document.getElementById('modalRankStatus');
+    statusEl.textContent = r.is_open ? 'OPEN' : 'CLOSED';
+    statusEl.style.background = r.is_open ? '#dcfce7' : '#fee2e2';
+    statusEl.style.color = r.is_open ? '#166534' : '#991b1b';
+
+    const gallery = document.getElementById('modalPhotoGallery');
+    gallery.innerHTML = (r.photo_urls || []).map(url => `<img src="${API_BASE}${url}" onclick="openLightbox('${API_BASE}${url}')">`).join('') || '<small style="color:#94a3b8">No photos available.</small>';
+
+    document.getElementById('goToRankBtn').onclick = () => {
+        closeRankModal();
+        map.setView([Number(r.latitude), Number(r.longitude)], 17);
+        drawRouteToRank(Number(r.latitude), Number(r.longitude), r.name, 25);
+    };
+
+    document.getElementById('rankDetailModal').style.display = 'flex';
+}
+
+function closeRankModal() { closeModal('rankDetailModal'); }
+
+function drawRouteToRank(lat, lng, name, etaMins) {
+    if(currentRouteControl) map.removeControl(currentRouteControl);
+    currentRouteControl = L.Routing.control({
+        waypoints: [L.latLng(commuterLat, commuterLng), L.latLng(lat, lng)],
+        routeWhileDragging: false, addWaypoints: false, draggableWaypoints: false, showAlternatives: false, fitSelectedRoutes: true,
+        createMarker: (i,w)=>L.marker(w.latLng).bindPopup(i===0?'<b>You are here</b>':`<b>🏢 ${escapeHtml(name)}</b>`),
+        lineOptions: { styles: [{ color: '#16a34a', weight: 6, opacity: 0.85 }] }
+    }).addTo(map);
+
+    document.getElementById('navDestinationTitle').textContent = name;
+    document.getElementById('navTravelTime').textContent = `${etaMins} min`;
+    document.getElementById('navTravelDist').textContent = `~3.2 km`;
+    document.getElementById('navInstructionText').textContent = `Head straight towards ${name}.`;
+    document.getElementById('activeNavBottomCard').style.display = 'flex';
+}
+
+function stopNavigation() {
+    if(currentRouteControl) { map.removeControl(currentRouteControl); currentRouteControl = null; }
+    document.getElementById('activeNavBottomCard').style.display = 'none';
+}
+
+function calculateDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * (Math.PI / 180);
+    const dLon = (lon2 - lon1) * (Math.PI / 180);
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+}
+
+async function searchHomeDestination() {
+    const query = document.getElementById('homeSearchInput').value.trim();
+    if(!query) return;
+    try {
+        const res = await fetch(`${API_BASE}/api/commuter/search/destination?q=${encodeURIComponent(query)}`);
+        const data = await res.json();
+        if(data.success && data.results && data.results.length > 0) {
+            const loc = data.results[0];
+            map.setView([loc.latitude, loc.longitude], 17);
+            drawRouteToRank(loc.latitude, loc.longitude, loc.place_name, 15);
+        } else {
+            alert('Destination or rank not found.');
+        }
+    } catch(e) {
+        alert('Search error.');
+    }
+}
+
+async function searchRanksByPlace() {
+    const query = document.getElementById('placeSearchInput').value.trim();
+    if(!query) return;
+    try {
+        const res = await fetch(`${API_BASE}/api/commuter/search/destination?q=${encodeURIComponent(query)}`);
+        const data = await res.json();
+        if(data.success && data.results && data.results.length > 0) {
+            const loc = data.results[0];
+            map.setView([loc.latitude, loc.longitude], 17);
+            drawRouteToRank(loc.latitude, loc.longitude, loc.place_name, 15);
+            document.getElementById('searchPlacesBox').classList.remove('show');
+        } else {
+            alert('Place not found.');
+        }
+    } catch(e) {
+        alert('Search error.');
+    }
+}
+
+function openLightbox(url) {
+    document.getElementById('lightboxImg').src = url;
+    document.getElementById('imageLightbox').style.display = 'flex';
+}
+function closeLightbox() { closeModal('imageLightbox'); }
+function logout() { localStorage.clear(); window.location.href = '/login.html'; }
+
+/* VERIFY NUMBER PLATE / TAXI FEATURE */
+function openVerifyModal() {
+    document.getElementById('verifyPlateInput').value = '';
+    document.getElementById('verifyResultContainer').style.display = 'none';
+    document.getElementById('verifyTaxiModal').style.display = 'flex';
+    if(window.innerWidth <= 768) toggleSidebar();
+}
+
+async function checkVehicleRegistration() {
+    const plate = document.getElementById('verifyPlateInput').value.trim().toUpperCase();
+    const resultBox = document.getElementById('verifyResultContainer');
+    if(!plate) { alert('Please enter a vehicle registration number.'); return; }
+    
+    resultBox.style.display = 'block';
+    resultBox.innerHTML = `<p style="color:#64748b; font-size:13px; text-align:center;">Scanning rank databases...</p>`;
+
+    try {
+        const res = await fetch(`${API_BASE}/api/drivers/verify?code=${encodeURIComponent(plate)}`);
+        const data = await res.json();
+        
+        if(data.success && data.driver) {
+            const d = data.driver;
+            resultBox.innerHTML = `
+                <div style="background:#dcfce7; border:1px solid #86efac; padding:14px; border-radius:10px; color:#166534;">
+                    <b style="font-size:15px; display:block; margin-bottom:4px;">🟢 OFFICIAL RANKED VEHICLE</b>
+                    <p style="font-size:13px; margin:2px 0;"><b>Driver:</b> ${escapeHtml(d.name)}</p>
+                    <p style="font-size:13px; margin:2px 0;"><b>Registration:</b> ${escapeHtml(d.vehicle_registration)}</p>
+                    <p style="font-size:13px; margin:2px 0;"><b>Status:</b> Approved & Active at Rank</p>
+                </div>
+            `;
+        } else {
+            resultBox.innerHTML = `
+                <div style="background:#fee2e2; border:1px solid #fca5a5; padding:14px; border-radius:10px; color:#991b1b;">
+                    <b style="font-size:15px; display:block; margin-bottom:4px;">🔴 UNVERIFIED / NOT RANKED</b>
+                    <p style="font-size:13px; margin:2px 0;">This vehicle registration was not found in any official rank database. Exercise caution.</p>
+                </div>
+            `;
+        }
+    } catch(e) {
+        resultBox.innerHTML = `<div style="background:#fef3c7; border:1px solid #fde68a; padding:12px; border-radius:10px; color:#92400e; font-size:13px;">Could not connect to server verification service.</div>`;
+    }
+}
+
+function stopQrScanner() {
+    if (html5QrCode) {
+        html5QrCode.stop().then(() => {
+            html5QrCode.clear();
+            html5QrCode = null;
+        }).catch(() => { html5QrCode = null; });
+    }
+}
+
+function switchCamera(facingMode) {
+    currentFacingMode = facingMode;
+    if (html5QrCode) {
+        html5QrCode.stop().then(() => { setTimeout(initQrScanner, 200); }).catch(() => { setTimeout(initQrScanner, 200); });
+    } else {
+        initQrScanner();
+    }
+}
+
+
+async function verifyScannedData(code) {
+    const verifyBtn = document.querySelector('#reportStepScan button[onclick="verifyDriverQR()"]');
+    if (verifyBtn) {
+        verifyBtn.disabled = true;
+        verifyBtn.style.opacity = "0.6";
+        verifyBtn.textContent = "Verifying vehicle...";
+    }
+
+    try {
+        const res = await fetch(`${API_BASE}/api/drivers/verify?code=${encodeURIComponent(code)}`);
+        const data = await res.json();
+        
+        if(res.ok && data.success && data.driver) {
+            verifiedDriverData = data.driver;
+            document.getElementById('verifiedVehicleDisplay').textContent = `${verifiedDriverData.vehicle_registration} (${verifiedDriverData.name})`;
+            stopQrScanner();
+            document.getElementById('reportStepScan').style.display = 'none';
+            document.getElementById('reportStepForm').style.display = 'block';
+        } else {
+            alert(data.message || 'Vehicle or driver not found in the system or not approved at any rank.');
+        }
+    } catch(e) {
+        alert('Verification failed. Server connection error.');
+    } finally {
+        if (verifyBtn) {
+            verifyBtn.disabled = false;
+            verifyBtn.style.opacity = "1";
+            verifyBtn.textContent = "Verify & Continue ➔";
+        }
+    }
+}
+
+/* ======================================================== */
+/* ACCESSIBLE CONVERSATIONAL VOICE ASSISTANT                */
+/* ======================================================== */
+
+function toggleChat(){
+    const p = document.getElementById('aiChatPanel');
+    const willOpen = p.style.display !== 'flex';
+    p.style.display = willOpen ? 'flex' : 'none';
+}
+
+async function toggleVoiceMode() {
+    voiceModeActive = !voiceModeActive;
+    const btn = document.getElementById('voiceToggleBtn');
+    const micBtn = document.getElementById('micBtn');
+    
+    if(voiceModeActive) {
+        btn.textContent = "🔊 Voice: ON";
+        btn.style.background = "#2563eb";
+        micBtn.style.display = "block";
+        await savePreferences();
+        document.getElementById('aiChatPanel').style.display = 'flex';
+        checkBotNameAndGreet();
+    } else {
+        btn.textContent = "🔇 Voice: OFF";
+        btn.style.background = "#16a34a";
+        micBtn.style.display = "none";
+        window.speechSynthesis.cancel();
+        botState = 'MENU';
+        stopContinuousListening();
+        await savePreferences();
+    }
+}
+
+async function changeVoiceGender() {
+    const selectElem = document.getElementById('voiceGenderSelect');
+    if (selectElem) voiceGender = selectElem.value;
+    await savePreferences();
+    speakAndListen(`Voice changed to ${voiceGender}.`);
+}
+
+async function savePreferences() {
+    if (!currentUser?.id) return;
+    try {
+        await fetch(`${API_BASE}/api/commuter/preference`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ userId: currentUser.id, mode: voiceModeActive ? 'voice' : 'text', botName: customBotName, voiceGender: voiceGender })
+        });
+    } catch(e) {}
+}
+
+async function loadUserInteractionPreference() {
+    if (!currentUser?.id) return;
+    try {
+        const res = await fetch(`${API_BASE}/api/commuter/preference/${encodeURIComponent(currentUser.id)}`);
+        const data = await res.json();
+        if (data.success) {
+            if (data.botName) {
+                customBotName = data.botName;
+                const titleEl = document.getElementById('assistantTitleHeader');
+                if (titleEl) titleEl.textContent = `TaxiFlow Assistant (${customBotName})`;
+            }
+            if (data.voiceGender) {
+                voiceGender = data.voiceGender;
+                const selectEl = document.getElementById('voiceGenderSelect');
+                if (selectEl) selectEl.value = voiceGender;
+            }
+            if (data.mode === 'voice') {
+                voiceModeActive = true;
+                const btn = document.getElementById('voiceToggleBtn');
+                const micBtn = document.getElementById('micBtn');
+                if(btn) { btn.textContent = "🔊 Voice: ON"; btn.style.background = "#2563eb"; }
+                if(micBtn) micBtn.style.display = "block";
+                document.getElementById('aiChatPanel').style.display = 'flex';
+                checkBotNameAndGreet();
+            }
+        }
+    } catch(e) {}
+}
+
+function checkBotNameAndGreet() {
+    if (!customBotName || customBotName === "Transitrack") {
+        const modal = document.getElementById('botNamingModal');
+        if (modal) modal.style.display = 'flex';
+    } else {
+        botState = 'STANDBY';
+        startVoiceListening();
+        speakAndListen(`HELLO! I am ${customBotName}. Say "Hello ${customBotName}" to activate me.`);
+    }
+}
+
+async function saveCustomBotName() {
+    const nameInput = document.getElementById('customBotNameInput').value.trim();
+    if (!nameInput) { alert('Please enter a name for your assistant.'); return; }
+    customBotName = nameInput;
+    const titleEl = document.getElementById('assistantTitleHeader');
+    if (titleEl) titleEl.textContent = `TaxiFlow Assistant (${customBotName})`;
+    const modal = document.getElementById('botNamingModal');
+    if (modal) modal.style.display = 'none';
+    await savePreferences();
+
+    botState = 'STANDBY';
+    startVoiceListening();
+    speakAndListen(`Assistant named ${customBotName} saved! Say "Hello ${customBotName}" to begin.`);
+}
+
+function speakBotMessage(text, onComplete = null) {
+    if(!voiceModeActive || !('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    
+    isAssistantSpeaking = true;
+    stopContinuousListening();
+
+    const phoneticName = customBotName.toLowerCase() === 'sipho' ? 'Sip-ho' : customBotName;
+    const cleanText = text.replace(new RegExp(`,? ${customBotName}$`, 'i'), '');
+    const finalSpokenText = `${cleanText}, ${phoneticName}`;
+
+    const utterance = new SpeechSynthesisUtterance(finalSpokenText);
+    utterance.rate = 0.75; 
+    utterance.pitch = voiceGender === 'female' ? 1.2 : 0.8;
+
+    const voices = window.speechSynthesis.getVoices();
+    if (voices.length > 0) {
+        const matchedVoice = voices.find(v => {
+            const name = v.name.toLowerCase();
+            if (voiceGender === 'female') return name.includes('female') || name.includes('zira') || name.includes('victoria') || name.includes('samantha');
+            return name.includes('male') || name.includes('david') || name.includes('george');
+        });
+        if (matchedVoice) utterance.voice = matchedVoice;
+    }
+
+    utterance.onend = () => {
+        isAssistantSpeaking = false;
+        if (voiceModeActive) { setTimeout(startVoiceListening, 400); }
+        if (onComplete) onComplete();
+    };
+
+    utterance.onerror = () => {
+        isAssistantSpeaking = false;
+        if (voiceModeActive) { setTimeout(startVoiceListening, 400); }
+    };
+
+    window.speechSynthesis.speak(utterance);
+}
+
+function speakAndListen(text) {
+    speakBotMessage(text, () => { startVoiceListening(); });
+}
+
+function initSpeechRecognition() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) return;
+    recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = 'en-ZA';
+
+    recognition.onresult = (event) => {
+        if (isAssistantSpeaking) return; 
+        const transcript = event.results[0][0].transcript.trim().toLowerCase();
+        const inputField = document.getElementById('chatInput');
+        if (inputField) inputField.value = transcript;
+        processBotInput(transcript);
+    };
+
+    recognition.onerror = () => {
+        if (voiceModeActive && isListeningActive && !isAssistantSpeaking) { 
+            setTimeout(startVoiceListening, 600); 
+        }
+    };
+
+    recognition.onend = () => {
+        isListeningActive = false;
+        if (voiceModeActive && !isAssistantSpeaking) { 
+            setTimeout(startVoiceListening, 300); 
+        }
+    };
+}
+
+function startVoiceListening() {
+    if (!voiceModeActive || !recognition || isAssistantSpeaking) return;
+    try { 
+        isListeningActive = true; 
+        recognition.start(); 
+    } catch(e) {}
+}
+
+function stopContinuousListening() {
+    isListeningActive = false;
+    if (recognition) { try { recognition.stop(); } catch(e) {} }
+}
+
+function sendBotMessage() {
+    const input = document.getElementById('chatInput');
+    const text = input.value.trim();
+    if(!text) return;
+    appendUserMessage(text);
+    input.value = '';
+    processBotInput(text.toLowerCase());
+}
+
+function appendUserMessage(text) {
+    const box = document.getElementById('chatMessages');
+    const u = document.createElement('div');
+    u.className = 'msg-user'; u.textContent = text;
+    box.appendChild(u); box.scrollTop = box.scrollHeight;
+}
+
+function appendBotMessage(htmlContent, spokenText = "") {
+    const box = document.getElementById('chatMessages');
+    const b = document.createElement('div');
+    b.className = 'msg-bot'; b.innerHTML = htmlContent;
+    box.appendChild(b); box.scrollTop = box.scrollHeight;
+    if (spokenText) { speakAndListen(spokenText); }
+}
+
+function handleBotOption(optionNum) { processBotInput(String(optionNum)); }
+
+async function processBotInput(inputStr) {
+    appendUserMessage(inputStr);
+    const cleanInput = inputStr.toLowerCase();
+    const hotword = `hello ${customBotName.toLowerCase()}`;
+
+    if (cleanInput.includes('cancel') && cleanInput.includes(customBotName.toLowerCase())) {
+        botState = 'MENU';
+        const cancelMsg = "Thank you. Trip cancelled. Returning to main menu.";
+        appendBotMessage(cancelMsg, cancelMsg);
+        return;
+    }
+
+    if (cleanInput.includes('repeat')) {
+        const rep = "Please choose in the options: Option 1, Nearest Taxi Rank. Option 2, Live Taxis and Destination. Option 3, Bus Information. Option 4, Report Taxi Driver.";
+        appendBotMessage(rep, rep);
+        return;
+    }
+
+    if (botState === 'STANDBY') {
+        if (cleanInput.includes(hotword) || cleanInput.includes('hello')) {
+            botState = 'MENU';
+            const helloText = "Hello. What can I do for you today? Choose in the options: Option 1, Nearest Taxi Rank. Option 2, Live Taxis and Destination. Option 3, Bus Information. Option 4, Report Taxi Driver.";
+            appendBotMessage(helloText, helloText);
+        }
+        return;
+    }
+
+    if (botState === 'MENU') {
+        if (cleanInput.includes('nearest taxi rank') || cleanInput.includes('taxi rank') || cleanInput.includes('1') || cleanInput.includes('one')) {
+            botState = 'WAITING_RANK_CHOICE';
+            try {
+                const res = await fetch(`${API_BASE}/api/ranks?type=TAXI`);
+                const data = await res.json();
+                listedRanks = (data.ranks || []).slice(0, 4);
+
+                if (listedRanks.length === 0) {
+                    appendBotMessage("No ranks found.", "No ranks found.");
+                    botState = 'MENU'; return;
+                }
+
+                let rankListHtml = `Here are the ${listedRanks.length} nearest taxi ranks:<br>`;
+                appendBotMessage(rankListHtml, "");
+                readRanksSequentially(0);
+            } catch(e) {
+                appendBotMessage("Failed to fetch ranks.", "Failed to fetch ranks.");
+                botState = 'MENU';
+            }
+        }
+        else if (cleanInput.includes('live taxis') || cleanInput.includes('2') || cleanInput.includes('two')) {
+            botState = 'LIVE_TAXIS_MENU';
+            const liveMenu = "Option 1, see taxis near you. Option 2, nearest taxi roads. Option 3, highlight taxi roads. Option 4, go live.";
+            appendBotMessage(liveMenu, liveMenu);
+        }
+        else if (cleanInput.includes('bus') || cleanInput.includes('3') || cleanInput.includes('three')) {
+            botState = 'BUS_MENU';
+            const busMenu = "You selected Bus Information. Option 1, see bus ranks. Option 2, verify bus driver.";
+            appendBotMessage(busMenu, busMenu);
+        }
+        else if (cleanInput.includes('report') || cleanInput.includes('4') || cleanInput.includes('four')) {
+            appendBotMessage("Opening taxi driver safety report.", "Opening taxi driver report.");
+            setTimeout(() => { openReportModal('TAXI'); toggleChat(); }, 1200);
+        }
+        else if (cleanInput.includes('greeting') || cleanInput.includes('hello')) {
+            botState = 'STANDBY';
+            const greetReply = "Thank you so much for caring! I am on standby.";
+            appendBotMessage(greetReply, greetReply);
+        }
+        else {
+            const fallback = "Please choose from Option 1, 2, 3, or 4.";
+            appendBotMessage(fallback, fallback);
+        }
+    }
+    else if (botState === 'BUS_MENU') {
+        if (cleanInput.includes('1') || cleanInput.includes('one')) {
+            appendBotMessage("Switching to Bus Ranks directory.", "Switching to bus ranks directory.");
+            setTimeout(() => { selectMenu('bus'); toggleChat(); }, 1200);
+            botState = 'MENU';
+        } else if (cleanInput.includes('2') || cleanInput.includes('two')) {
+            appendBotMessage("Opening bus driver verification.", "Opening bus driver verification.");
+            setTimeout(() => { openVerifyModal(); toggleChat(); }, 1200);
+            botState = 'MENU';
+        }
+    }
+    else if (botState === 'WAITING_RANK_CHOICE') {
+        let found = null;
+        if (cleanInput.includes('1') || cleanInput.includes('one')) found = listedRanks[0];
+        else if (cleanInput.includes('2') || cleanInput.includes('two')) found = listedRanks[1];
+        else if (cleanInput.includes('3') || cleanInput.includes('three')) found = listedRanks[2];
+        else if (cleanInput.includes('4') || cleanInput.includes('four')) found = listedRanks[3];
+        else found = listedRanks.find(r => cleanInput.includes(r.name.toLowerCase()));
+
+        if (found) {
+            selectedRankObj = found;
+            botState = 'WAITING_CONFIRM_DESTINATION';
+            const q = `You selected ${found.name}. Do you want to go or just checking?`;
+            appendBotMessage(q, q);
+        } else {
+            appendBotMessage("Rank not recognized. Say rank 1, 2, or cancel.", "Rank not recognized.");
+        }
+    }
+    else if (botState === 'WAITING_CONFIRM_DESTINATION') {
+        if (cleanInput.includes('go') || cleanInput.includes('yes')) {
+            const goMsg = `Starting navigation to ${selectedRankObj.name}.`;
+            appendBotMessage(goMsg, goMsg);
+            
+            setTimeout(() => {
+                const lat = Number(selectedRankObj.latitude);
+                const lng = Number(selectedRankObj.longitude);
+                
+                // Center map and invoke the complete routing and highlight sequence
+                map.setView([lat, lng], 17);
+                
+                // Call drawRouteToRank with real coordinates and rank name
+                drawRouteToRank(lat, lng, selectedRankObj.name, 15);
+                
+                botState = 'MENU'; 
+                toggleChat();
+            }, 1500);
+        
+        } else {
+            botState = 'MENU';
+            appendBotMessage("Returning to main menu.", "Returning to main menu.");
+        }
+    }
+    else if (botState === 'LIVE_TAXIS_MENU') {
+        if (cleanInput.includes('1') || cleanInput.includes('one')) {
+            scanNearbyTaxis();
+            botState = 'MENU';
+        } else if (cleanInput.includes('2') || cleanInput.includes('two')) {
+            routeToNearestTaxiRoad();
+            botState = 'MENU';
+        } else if (cleanInput.includes('3') || cleanInput.includes('three')) {
+            highlightTaxiRoads();
+            botState = 'MENU';
+        } else if (cleanInput.includes('4') || cleanInput.includes('four')) {
+            promptGoLive();
+            botState = 'MENU';
+        }
+    }
+}
+
+function readRanksSequentially(index) {
+    if (index >= listedRanks.length) {
+        const promptEnd = "Which rank do you want to choose? Say rank 1, 2, 3, 4, or cancel.";
+        appendBotMessage(promptEnd, promptEnd);
+        return;
+    }
+    const r = listedRanks[index];
+    const cleanDesc = (r.description || r.address || 'Local destinations').replace(/→|->|to/gi, ' to ');
+    const rankSpeech = `Rank ${index + 1}. Name: ${r.name}. Routes: ${cleanDesc}.`;
+    speakBotMessage(rankSpeech, () => { setTimeout(() => { readRanksSequentially(index + 1); }, 1200); });
+}
+
+
+function simulateScanSuccess() {
+    commuterPoints += 10;
+    localStorage.setItem('taxiFlowPoints', commuterPoints);
+    document.getElementById('commuterPointsDisplay').textContent = commuterPoints;
+    closeModal('scanPointsModal');
+    alert('Success! You earned 10 TaxiFlow Points! 🪙');
+}
+
+window.addEventListener('load',init);
+</script>
+</body>
+</html>

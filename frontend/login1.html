@@ -1,0 +1,2119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>TaxiFlow | Login</title>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+        :root {
+            --primary: #16a34a;
+            --primary-dark: #15803d;
+            --bg-dark: #071a12;
+            --bg-green: #0f5132;
+            --text-dark: #111827;
+            --text-light: #6b7280;
+            --border: #d1d5db;
+            --error: #ef4444;
+            --success: #22c55e;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: linear-gradient(
+                135deg,
+                var(--bg-dark),
+                var(--bg-green),
+                var(--primary)
+            );
+
+            min-height: 100vh;
+
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            font-family: 'Inter', sans-serif;
+
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+
+            box-shadow: 0 25px 70px rgba(0,0,0,0.4);
+
+            position: relative;
+            overflow: hidden;
+
+            width: 950px;
+            max-width: 100%;
+
+            min-height: 620px;
+        }
+
+        /* ==============================
+            FORM CONTAINERS
+        ============================== */
+
+        .form-container {
+            position: absolute;
+
+            top: 0;
+            height: 100%;
+
+            transition: all 0.6s ease-in-out;
+        }
+
+        .sign-in-container {
+            left: 0;
+            width: 50%;
+            z-index: 2;
+        }
+
+        .sign-up-container {
+            left: 0;
+            width: 50%;
+
+            opacity: 0;
+            z-index: 1;
+        }
+
+        .container.right-panel-active
+        .sign-in-container {
+            transform: translateX(100%);
+        }
+
+        .container.right-panel-active
+        .sign-up-container {
+            transform: translateX(100%);
+
+            opacity: 1;
+            z-index: 5;
+
+            animation: show 0.6s;
+        }
+
+        @keyframes show {
+
+            0%, 49.99% {
+                opacity: 0;
+                z-index: 1;
+            }
+
+            50%, 100% {
+                opacity: 1;
+                z-index: 5;
+            }
+        }
+
+        form {
+            background: white;
+
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+
+            flex-direction: column;
+
+            padding: 45px 45px;
+
+            height: 100%;
+
+            text-align: center;
+
+            overflow-y: auto;
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 800;
+
+            color: var(--text-dark);
+
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            color: var(--text-light);
+
+            font-size: 13px;
+
+            margin-bottom: 25px;
+        }
+
+        /* ==============================
+            BRAND
+        ============================== */
+
+        .brand-logo {
+            font-size: 32px;
+
+            font-weight: 900;
+
+            color: white;
+
+            margin-bottom: 15px;
+        }
+
+        .brand-logo span {
+            color: #86efac;
+        }
+
+        /* ==============================
+            INPUTS
+        ============================== */
+
+        .input-group {
+            width: 100%;
+
+            margin-bottom: 12px;
+
+            text-align: left;
+        }
+
+        .input-group label {
+            display: block;
+
+            font-size: 11px;
+
+            font-weight: 700;
+
+            color: var(--text-light);
+
+            margin-bottom: 5px;
+        }
+
+        input,
+        select {
+            background: #f9fafb;
+
+            border: 1px solid var(--border);
+
+            padding: 12px 14px;
+
+            border-radius: 8px;
+
+            width: 100%;
+
+            font-family: inherit;
+
+            outline: none;
+
+            transition: 0.2s;
+        }
+
+        input:focus,
+        select:focus {
+            border-color: var(--primary);
+
+            background: white;
+
+            box-shadow: 0 0 0 3px rgba(22,163,74,0.08);
+        }
+
+        .row {
+            display: flex;
+
+            gap: 10px;
+
+            width: 100%;
+        }
+
+        .row .input-group {
+            flex: 1;
+        }
+
+        /* ==============================
+            BUTTONS
+        ============================== */
+
+        button {
+            border-radius: 8px;
+
+            border: none;
+
+            background: var(--primary);
+
+            color: white;
+
+            font-size: 13px;
+
+            font-weight: 800;
+
+            padding: 14px 25px;
+
+            letter-spacing: 0.5px;
+
+            text-transform: uppercase;
+
+            transition: 0.2s;
+
+            cursor: pointer;
+
+            width: 100%;
+
+            margin-top: 8px;
+        }
+
+        button:hover {
+            background: var(--primary-dark);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+
+            cursor: not-allowed;
+        }
+
+        button.ghost {
+            background: transparent;
+
+            border: 2px solid white;
+
+            width: auto;
+
+            padding: 12px 30px;
+        }
+
+        button.ghost:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        /* ==============================
+            ACCOUNT TYPE
+        ============================== */
+
+        .account-types {
+            width: 100%;
+
+            display: grid;
+
+            grid-template-columns: repeat(3, 1fr);
+
+            gap: 8px;
+
+            margin-bottom: 18px;
+        }
+
+        .account-type {
+            border: 2px solid #e5e7eb;
+
+            border-radius: 10px;
+
+            padding: 12px 6px;
+
+            cursor: pointer;
+
+            transition: 0.2s;
+
+            background: white;
+
+            text-align: center;
+        }
+
+        .account-type:hover {
+            border-color: #86efac;
+        }
+
+        .account-type.active {
+            border-color: var(--primary);
+
+            background: #f0fdf4;
+        }
+
+        .account-type .icon {
+            font-size: 22px;
+
+            margin-bottom: 5px;
+        }
+
+        .account-type strong {
+            display: block;
+
+            font-size: 11px;
+
+            color: var(--text-dark);
+        }
+
+        .account-type small {
+            color: var(--text-light);
+
+            font-size: 9px;
+        }
+
+        /* ==============================
+            CONDITIONAL SECTIONS
+        ============================== */
+
+        .registration-section {
+            display: none;
+
+            width: 100%;
+        }
+
+        .registration-section.active {
+            display: block;
+        }
+
+        .section-title {
+            text-align: left;
+
+            width: 100%;
+
+            font-size: 11px;
+
+            font-weight: 800;
+
+            color: var(--primary-dark);
+
+            text-transform: uppercase;
+
+            border-bottom: 1px solid #e5e7eb;
+
+            padding-bottom: 6px;
+
+            margin: 10px 0 12px;
+        }
+
+        .info-box {
+            width: 100%;
+
+            background: #f0fdf4;
+
+            border: 1px solid #bbf7d0;
+
+            color: #166534;
+
+            padding: 10px;
+
+            border-radius: 8px;
+
+            font-size: 11px;
+
+            text-align: left;
+
+            margin-bottom: 12px;
+        }
+
+        /* ==============================
+            MESSAGES
+        ============================== */
+
+        .msg-box {
+            display: none;
+
+            width: 100%;
+
+            margin-top: 12px;
+
+            padding: 10px;
+
+            border-radius: 6px;
+
+            font-size: 12px;
+
+            font-weight: 600;
+        }
+
+        .msg-error {
+            display: block;
+
+            background: #fee2e2;
+
+            color: var(--error);
+        }
+
+        .msg-success {
+            display: block;
+
+            background: #dcfce7;
+
+            color: #166534;
+        }
+
+        /* ==============================
+            OVERLAY
+        ============================== */
+
+        .overlay-container {
+            position: absolute;
+
+            top: 0;
+            left: 50%;
+
+            width: 50%;
+            height: 100%;
+
+            overflow: hidden;
+
+            transition: transform 0.6s ease-in-out;
+
+            z-index: 100;
+        }
+
+        .container.right-panel-active
+        .overlay-container {
+            transform: translateX(-100%);
+        }
+
+        .overlay {
+            background: linear-gradient(
+                to right,
+                #0f5132,
+                var(--primary)
+            );
+
+            position: relative;
+
+            left: -100%;
+
+            height: 100%;
+            width: 200%;
+
+            transform: translateX(0);
+
+            transition: transform 0.6s ease-in-out;
+
+            color: white;
+        }
+
+        .container.right-panel-active
+        .overlay {
+            transform: translateX(50%);
+        }
+
+        .overlay-panel {
+            position: absolute;
+
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            flex-direction: column;
+
+            padding: 0 40px;
+
+            text-align: center;
+
+            top: 0;
+
+            height: 100%;
+            width: 50%;
+
+            transform: translateX(0);
+
+            transition: transform 0.6s ease-in-out;
+        }
+
+        .overlay-left {
+            transform: translateX(-20%);
+        }
+
+        .container.right-panel-active
+        .overlay-left {
+            transform: translateX(0);
+        }
+
+        .overlay-right {
+            right: 0;
+        }
+
+        .container.right-panel-active
+        .overlay-right {
+            transform: translateX(20%);
+        }
+
+        .overlay-panel h1 {
+            color: white;
+
+            font-size: 27px;
+
+            margin-bottom: 10px;
+        }
+
+        .overlay-panel p {
+            font-size: 13px;
+
+            line-height: 21px;
+
+            margin-bottom: 25px;
+
+            color: rgba(255,255,255,0.9);
+        }
+
+        /* ==============================
+            BACK
+        ============================== */
+
+        .back-link {
+            position: fixed;
+
+            bottom: 15px;
+
+            color: white;
+
+            text-decoration: none;
+
+            font-size: 13px;
+
+            opacity: 0.85;
+        }
+
+        .back-link:hover {
+            opacity: 1;
+        }
+
+        /* ==============================
+            MOBILE
+        ============================== */
+
+        @media(max-width: 750px) {
+
+            body {
+                padding: 10px;
+            }
+
+            .container {
+                min-height: 680px;
+            }
+
+            .overlay-container {
+                display: none;
+            }
+
+            .sign-in-container,
+            .sign-up-container {
+                width: 100%;
+            }
+
+            .container.right-panel-active
+            .sign-in-container {
+                transform: translateX(-100%);
+            }
+
+            .container.right-panel-active
+            .sign-up-container {
+                transform: translateX(0);
+            }
+
+            .account-types {
+                grid-template-columns: 1fr;
+            }
+
+            form {
+                padding: 30px 25px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container" id="container">
+
+    <!-- ==================================================
+         REGISTRATION
+    ================================================== -->
+
+    <div class="form-container sign-up-container">
+
+        <!-- Added 'novalidate' to stop the browser from silently blocking the submit -->
+        <form id="registerForm" novalidate>
+
+            <h1>Create Account</h1>
+
+            <div class="subtitle">
+                Join TaxiFlow
+            </div>
+
+            <!-- ACCOUNT TYPE -->
+
+            <div class="section-title">
+                Choose Account Type
+            </div>
+
+            <div class="account-types">
+
+                <div
+                    class="account-type active"
+                    data-type="GENERAL_USER"
+                    onclick="selectAccountType('GENERAL_USER')"
+                >
+                    <div class="icon">👤</div>
+
+                    <strong>General User</strong>
+
+                    <small>Find taxis</small>
+                </div>
+
+                <div
+                    class="account-type"
+                    data-type="DRIVER"
+                    onclick="selectAccountType('DRIVER')"
+                >
+                    <div class="icon">🚕</div>
+
+                    <strong>Taxi Driver</strong>
+
+                    <small>Drive taxis</small>
+                </div>
+
+                <div
+                    class="account-type"
+                    data-type="BUS_DRIVER"
+                    onclick="selectAccountType('BUS_DRIVER')"
+                >
+                    <div class="icon">🚌</div>
+
+                    <strong>Bus Driver</strong>
+
+                    <small>Drive buses</small>
+                </div>
+
+                <div
+                    class="account-type"
+                    data-type="RANK_ADMIN"
+                    onclick="selectAccountType('RANK_ADMIN')"
+                >
+                    <div class="icon">🏢</div>
+
+                    <strong>Taxi Rank Admin</strong>
+
+                    <small>Manage taxi rank</small>
+                </div>
+
+                <div
+                    class="account-type"
+                    data-type="BUS_RANK_ADMIN"
+                    onclick="selectAccountType('BUS_RANK_ADMIN')"
+                >
+                    <div class="icon">🚏</div>
+
+                    <strong>Bus Rank Admin</strong>
+
+                    <small>Manage bus rank</small>
+                </div>
+
+            </div>
+
+            <input
+                type="hidden"
+                id="accountType"
+                value="GENERAL_USER"
+            >
+
+            <!-- ==============================
+                 BASIC INFORMATION
+            ============================== -->
+
+            <div class="section-title">
+                Personal Information
+            </div>
+
+            <div class="input-group">
+
+                <label>Full Name</label>
+
+                <input
+                    type="text"
+                    id="regName"
+                    placeholder="Enter your full name"
+                    required
+                >
+
+            </div>
+
+            <div class="row">
+
+                <div class="input-group">
+
+                    <label>Phone Number</label>
+
+                    <input
+                        type="tel"
+                        id="regPhone"
+                        placeholder="Phone number"
+                        required
+                    >
+
+                </div>
+
+                <div class="input-group">
+
+                    <label>Email</label>
+
+                    <input
+                        type="email"
+                        id="regEmail"
+                        placeholder="Email address"
+                        required
+                    >
+
+                </div>
+
+            </div>
+
+            <div class="row">
+
+                <div class="input-group">
+
+                    <label>Username</label>
+
+                    <input
+                        type="text"
+                        id="regUsername"
+                        placeholder="Choose username"
+                        required
+                    >
+
+                </div>
+
+                <div class="input-group">
+
+                    <label>Password</label>
+
+                    <input
+                        type="password"
+                        id="regPassword"
+                        placeholder="Create password"
+                        required
+                    >
+
+                </div>
+
+            </div>
+
+            <div class="input-group">
+
+                <label>Confirm Password</label>
+
+                <input
+                    type="password"
+                    id="regConfirmPassword"
+                    placeholder="Repeat password"
+                    required
+                >
+
+            </div>
+
+
+            <!-- ==================================================
+                 DRIVER SECTION (Taxi & Bus)
+            ================================================== -->
+
+            <div
+                id="driverSection"
+                class="registration-section"
+            >
+
+                <div class="section-title" id="driverSectionTitle">
+                    Driver Information
+                </div>
+
+                <div class="info-box" id="driverInfoBox">
+                    A driver can belong to a maximum of two taxi ranks.
+                    Each selected rank must approve the driver.
+                </div>
+
+                <div class="row">
+
+                    <div class="input-group">
+
+                        <label>Driver Number</label>
+
+                        <input
+                            type="text"
+                            id="driverNumber"
+                            placeholder="Driver number"
+                        >
+
+                    </div>
+
+                    <div class="input-group">
+
+                        <label>Driver Licence Number</label>
+
+                        <input
+                            type="text"
+                            id="licenseNumber"
+                            placeholder="Licence number"
+                        >
+
+                    </div>
+
+                </div>
+
+                <div class="row">
+
+                    <div class="input-group">
+
+                        <label>Number Plate</label>
+
+                        <input
+                            type="text"
+                            id="numberPlate"
+                            placeholder="e.g. ABC 123 GP"
+                        >
+
+                    </div>
+
+                    <div class="input-group">
+
+                        <label id="vehicleNumberLabel">Taxi Number</label>
+
+                        <input
+                            type="text"
+                            id="taxiNumber"
+                            placeholder="Vehicle number"
+                        >
+
+                    </div>
+
+                </div>
+
+                <div class="input-group">
+
+                    <label id="vehicleCapacityLabel">Taxi Capacity</label>
+
+                    <input
+                        type="number"
+                        id="taxiCapacity"
+                        min="1"
+                        max="60"
+                        placeholder="Number of passengers"
+                    >
+
+                </div>
+
+                <!-- DUAL BOX ROUTE DRIVEN INPUT -->
+                <div class="input-group">
+                    <label>Route You Drive (From → To)</label>
+                    <div class="row" style="align-items: center;">
+                        <input type="text" id="driverFrom" placeholder="From (e.g. Tzaneen)" style="flex: 1;">
+                        <span style="font-weight: 800; color: var(--text-light);">→</span>
+                        <input type="text" id="driverTo" placeholder="To (e.g. Polokwane)" style="flex: 1;">
+                    </div>
+                </div>
+
+                <div class="section-title" id="membershipSectionTitle">
+                    Taxi Rank Membership
+                </div>
+
+                <div class="input-group">
+
+                    <label id="primaryRankLabel">Primary Taxi Rank</label>
+
+                    <select id="driverRank1">
+
+                        <option value="">
+                            Select primary rank
+                        </option>
+
+                    </select>
+
+                </div>
+
+                <div class="input-group">
+
+                    <label id="secondaryRankLabel">Secondary Taxi Rank (Optional)</label>
+
+                    <select id="driverRank2">
+
+                        <option value="">
+                            Select second rank
+                        </option>
+
+                    </select>
+
+                </div>
+
+            </div>
+
+
+            <!-- ==================================================
+                 RANK ADMIN SECTION (Taxi & Bus)
+            ================================================== -->
+
+            <div
+                id="rankAdminSection"
+                class="registration-section"
+            >
+
+                <div class="section-title" id="adminSectionTitle">
+                    Taxi Rank Information
+                </div>
+
+                <div class="info-box">
+                    Your application will be sent to the TaxiFlow
+                    Super Admin for approval.
+                </div>
+
+                <div style="text-align: left; margin-bottom: 15px;">
+                    <label style="font-size: 12px; font-weight: 700; color: var(--primary-dark); cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" id="isExistingRankCheck" onchange="toggleRankMode()" style="width: auto; margin: 0;">
+                        This rank is already registered (I am adding a new route)
+                    </label>
+                </div>
+
+                <div id="newRankFields">
+                    <div class="input-group">
+
+                        <label id="rankNameLabel">Taxi Rank Name</label>
+
+                        <input
+                            type="text"
+                            id="rankName"
+                            placeholder="Enter rank name"
+                        >
+
+                    </div>
+
+                    <div class="input-group">
+
+                        <label>Rank Address</label>
+
+                        <input
+                            type="text"
+                            id="rankAddress"
+                            placeholder="Rank address"
+                        >
+
+                    </div>
+
+                    <div class="row">
+
+                        <div class="input-group">
+
+                            <label>Opening Time</label>
+
+                            <input
+                                type="time"
+                                id="openingTime"
+                            >
+
+                        </div>
+
+                        <div class="input-group">
+
+                            <label>Closing Time</label>
+
+                            <input
+                                type="time"
+                                id="closingTime"
+                            >
+
+                        </div>
+
+                    </div>
+
+                    <div class="row">
+
+                        <div class="input-group">
+
+                            <label>Contact Number</label>
+
+                            <input
+                                type="tel"
+                                id="rankPhone"
+                                placeholder="Rank contact number"
+                            >
+
+                        </div>
+
+                        <div class="input-group">
+
+                            <label>WhatsApp Number</label>
+
+                            <input
+                                type="tel"
+                                id="whatsappNumber"
+                                placeholder="WhatsApp number"
+                            >
+
+                        </div>
+
+                    </div>
+                </div>
+
+                <div id="existingRankFields" style="display: none;">
+                    <div class="input-group">
+                        <label id="searchRankLabel">Search Registered Ranks</label>
+                        <select id="existingRankSelect">
+                            <option value="">Select an existing rank...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- DUAL BOX ROUTES SERVED INPUT -->
+                <div class="input-group">
+                    <label>Route Served (From → To)</label>
+                    <div class="row" style="align-items: center;">
+                        <input type="text" id="routeFrom" placeholder="From (e.g. Tzaneen)" style="flex: 1;">
+                        <span style="font-weight: 800; color: var(--text-light);">→</span>
+                        <input type="text" id="routeTo" placeholder="To (e.g. Polokwane)" style="flex: 1;">
+                    </div>
+                </div>
+
+            </div>
+
+
+            <button
+                type="submit"
+                id="regBtn"
+            >
+                Create Account
+            </button>
+
+            <div
+                id="regMsg"
+                class="msg-box"
+            ></div>
+
+        </form>
+
+    </div>
+
+
+    <!-- ==================================================
+         LOGIN
+    ================================================== -->
+
+    <div class="form-container sign-in-container">
+
+        <form id="loginForm">
+
+            <div class="brand-logo"
+                 style="color:#16a34a;">
+                Taxi<span style="color:#15803d;">Flow</span>
+            </div>
+
+            <h1>Sign In</h1>
+
+            <div class="subtitle">
+                Welcome back to TaxiFlow
+            </div>
+
+            <div class="input-group">
+
+                <label>
+                    Username, Email, or Phone
+                </label>
+
+                <input
+                    type="text"
+                    id="loginUsername"
+                    placeholder="Enter username, email, or phone"
+                    required
+                >
+
+            </div>
+
+            <div class="input-group">
+
+                <label>Password</label>
+
+                <input
+                    type="password"
+                    id="loginPassword"
+                    placeholder="Enter password"
+                    required
+                >
+
+            </div>
+
+            <button
+                type="submit"
+                id="loginBtn"
+            >
+                Sign In
+            </button>
+
+            <div
+                id="loginMsg"
+                class="msg-box"
+            ></div>
+
+        </form>
+
+    </div>
+
+
+    <!-- ==================================================
+         SLIDING OVERLAY
+    ================================================== -->
+
+    <div class="overlay-container">
+
+        <div class="overlay">
+
+            <!-- LEFT -->
+
+            <div class="overlay-panel overlay-left">
+
+                <div class="brand-logo">
+                    Taxi<span>Flow</span>
+                </div>
+
+                <h1>
+                    Welcome Back!
+                </h1>
+
+                <p>
+                    Sign in to access your TaxiFlow
+                    account and services.
+                </p>
+
+                <button
+                    class="ghost"
+                    type="button"
+                    id="signIn"
+                >
+                    Sign In
+                </button>
+
+            </div>
+
+
+            <!-- RIGHT -->
+
+            <div class="overlay-panel overlay-right">
+
+                <div class="brand-logo">
+                    Taxi<span>Flow</span>
+                </div>
+
+                <h1>
+                    Join TaxiFlow
+                </h1>
+
+                <p>
+                    Find taxis & buses, drive passengers,
+                    or manage your transport rank.
+                </p>
+
+                <button
+                    class="ghost"
+                    type="button"
+                    id="signUp"
+                >
+                    Create Account
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<a
+    href="/"
+    class="back-link"
+>
+    ← Back to Map
+</a>
+
+
+<script>
+    // ==================================================
+    // GLOBAL API BASE
+    // Ensures requests hit your Node.js backend correctly
+    // ==================================================
+    const API_BASE = "http://localhost:3000";
+
+    // ==================================================
+    // UI
+    // ==================================================
+
+    const container =
+        document.getElementById("container");
+
+    const signUpButton =
+        document.getElementById("signUp");
+
+    const signInButton =
+        document.getElementById("signIn");
+
+
+    signUpButton.addEventListener(
+        "click",
+        () => {
+
+            container.classList.add(
+                "right-panel-active"
+            );
+
+        }
+    );
+
+
+    signInButton.addEventListener(
+        "click",
+        () => {
+
+            container.classList.remove(
+                "right-panel-active"
+            );
+
+        }
+    );
+
+
+    // ==================================================
+    // ACCOUNT TYPE
+    // ==================================================
+
+    function selectAccountType(type) {
+
+        document.getElementById(
+            "accountType"
+        ).value = type;
+
+
+        document
+            .querySelectorAll(".account-type")
+            .forEach(card => {
+
+                card.classList.remove("active");
+
+            });
+
+
+        const selected =
+            document.querySelector(
+                `.account-type[data-type="${type}"]`
+            );
+
+
+        if (selected) {
+
+            selected.classList.add("active");
+
+        }
+
+
+        document
+            .getElementById("driverSection")
+            .classList.remove("active");
+
+
+        document
+            .getElementById("rankAdminSection")
+            .classList.remove("active");
+
+
+        // Dynamic Labels and Text Changes based on Taxi vs Bus
+        const driverSectionTitle = document.getElementById("driverSectionTitle");
+        const driverInfoBox = document.getElementById("driverInfoBox");
+        const vehicleNumberLabel = document.getElementById("vehicleNumberLabel");
+        const vehicleCapacityLabel = document.getElementById("vehicleCapacityLabel");
+        const membershipSectionTitle = document.getElementById("membershipSectionTitle");
+        const primaryRankLabel = document.getElementById("primaryRankLabel");
+        const secondaryRankLabel = document.getElementById("secondaryRankLabel");
+
+        const adminSectionTitle = document.getElementById("adminSectionTitle");
+        const rankNameLabel = document.getElementById("rankNameLabel");
+        const searchRankLabel = document.getElementById("searchRankLabel");
+
+        if (type === "DRIVER" || type === "BUS_DRIVER") {
+            document
+                .getElementById("driverSection")
+                .classList.add("active");
+
+            if (type === "BUS_DRIVER") {
+                driverSectionTitle.textContent = "Bus Driver Information";
+                driverInfoBox.textContent = "A bus driver can belong to a maximum of two bus ranks. Each selected rank must approve the driver.";
+                vehicleNumberLabel.textContent = "Bus Number";
+                vehicleCapacityLabel.textContent = "Bus Capacity";
+                membershipSectionTitle.textContent = "Bus Rank Membership";
+                primaryRankLabel.textContent = "Primary Bus Rank";
+                secondaryRankLabel.textContent = "Secondary Bus Rank (Optional)";
+            } else {
+                driverSectionTitle.textContent = "Driver Information";
+                driverInfoBox.textContent = "A driver can belong to a maximum of two taxi ranks. Each selected rank must approve the driver.";
+                vehicleNumberLabel.textContent = "Taxi Number";
+                vehicleCapacityLabel.textContent = "Taxi Capacity";
+                membershipSectionTitle.textContent = "Taxi Rank Membership";
+                primaryRankLabel.textContent = "Primary Taxi Rank";
+                secondaryRankLabel.textContent = "Secondary Taxi Rank (Optional)";
+            }
+        }
+
+
+        if (type === "RANK_ADMIN" || type === "BUS_RANK_ADMIN") {
+            document
+                .getElementById("rankAdminSection")
+                .classList.add("active");
+
+            if (type === "BUS_RANK_ADMIN") {
+                adminSectionTitle.textContent = "Bus Rank Information";
+                rankNameLabel.textContent = "Bus Rank Name";
+                searchRankLabel.textContent = "Search Registered Bus Ranks";
+            } else {
+                adminSectionTitle.textContent = "Taxi Rank Information";
+                rankNameLabel.textContent = "Taxi Rank Name";
+                searchRankLabel.textContent = "Search Registered Taxi Ranks";
+            }
+        }
+
+        // Re-run loadRanks so dropdowns instantly adapt to the chosen account type
+        if (typeof loadRanks === "function") {
+            loadRanks();
+        }
+
+        updateRegistrationButton();
+
+    }
+
+
+    function updateRegistrationButton() {
+
+        const type =
+            document.getElementById(
+                "accountType"
+            ).value;
+
+
+        const button =
+            document.getElementById("regBtn");
+
+
+        if (type === "DRIVER") {
+
+            button.textContent =
+                "Submit Driver Application";
+
+        }
+        else if (type === "BUS_DRIVER") {
+
+            button.textContent =
+                "Submit Bus Driver Application";
+
+        }
+        else if (type === "RANK_ADMIN") {
+
+            button.textContent =
+                "Submit Rank Application";
+
+        }
+        else if (type === "BUS_RANK_ADMIN") {
+
+            button.textContent =
+                "Submit Bus Rank Application";
+
+        }
+        else {
+
+            button.textContent =
+                "Create Account";
+
+        }
+
+    }
+
+
+    function toggleRankMode() {
+        const isExisting = document.getElementById("isExistingRankCheck").checked;
+        if (isExisting) {
+            document.getElementById("newRankFields").style.display = "none";
+            document.getElementById("existingRankFields").style.display = "block";
+        } else {
+            document.getElementById("newRankFields").style.display = "block";
+            document.getElementById("existingRankFields").style.display = "none";
+        }
+    }
+
+
+    // ==================================================
+    // MESSAGE
+    // ==================================================
+
+    function showMsg(
+        element,
+        text,
+        type
+    ) {
+
+        element.textContent = text;
+        element.style.display = "block";
+
+        element.className =
+            "msg-box " +
+            (
+                type === "error"
+                    ? "msg-error"
+                    : "msg-success"
+            );
+
+    }
+
+
+    // ==================================================
+    // LOAD RANKS
+    // ==================================================
+
+    async function loadRanks() {
+        try {
+            const response = await fetch(`${API_BASE}/api/ranks`);
+            if (!response.ok) {
+                throw new Error("Failed to load ranks");
+            }
+
+            const data = await response.json();
+            const currentAccountType = document.getElementById("accountType").value;
+
+            const rank1 = document.getElementById("driverRank1");
+            const rank2 = document.getElementById("driverRank2");
+            const existingSelect = document.getElementById("existingRankSelect");
+
+            rank1.innerHTML = '<option value="">Select primary rank</option>';
+            rank2.innerHTML = '<option value="">Select second rank</option>';
+            existingSelect.innerHTML = '<option value="">Select an existing rank...</option>';
+
+            if (data.ranks && Array.isArray(data.ranks)) {
+                // Filter ranks strictly based on whether it's a bus account or taxi account
+                const isBusAccount = currentAccountType.includes("BUS");
+
+                const filteredRanks = data.ranks.filter(rank => {
+                    const rankType = String(rank.rank_type || "").toUpperCase();
+                    const rankName = String(rank.name || "").toLowerCase();
+
+                    if (isBusAccount) {
+                        // Include only bus ranks
+                        return rankType === "BUS" || rankName.includes("bus");
+                    } else {
+                        // Include only taxi ranks (exclude bus ranks)
+                        return rankType !== "BUS" && !rankName.includes("bus");
+                    }
+                });
+
+                filteredRanks.forEach(rank => {
+                    const option1 = document.createElement("option");
+                    option1.value = rank.id;
+                    option1.textContent = rank.display_name || rank.name;
+
+                    const option2 = option1.cloneNode(true);
+                    const option3 = option1.cloneNode(true);
+
+                    rank1.appendChild(option1);
+                    rank2.appendChild(option2);
+                    existingSelect.appendChild(option3);
+                });
+            }
+        }
+        catch(error) {
+            console.error("Rank loading error:", error);
+        }
+    }
+
+
+    // ==================================================
+    // DRIVER RANK LIMIT
+    // ==================================================
+
+    document
+        .getElementById("driverRank1")
+        .addEventListener(
+            "change",
+            function() {
+
+                const rank2 =
+                    document.getElementById(
+                        "driverRank2"
+                    );
+
+
+                Array
+                    .from(rank2.options)
+                    .forEach(option => {
+
+                        option.disabled =
+                            option.value ===
+                            this.value;
+
+                    });
+
+            }
+        );
+
+
+    // ==================================================
+    // REGISTRATION
+    // ==================================================
+
+    document
+        .getElementById("registerForm")
+        .addEventListener(
+            "submit",
+            async function(event) {
+
+                event.preventDefault();
+
+
+                const button =
+                    document.getElementById(
+                        "regBtn"
+                    );
+
+                const message =
+                    document.getElementById(
+                        "regMsg"
+                    );
+
+
+                message.style.display =
+                    "none";
+
+
+                const type =
+                    document.getElementById(
+                        "accountType"
+                    ).value;
+
+
+                const password =
+                    document.getElementById(
+                        "regPassword"
+                    ).value;
+
+
+                const confirmPassword =
+                    document.getElementById(
+                        "regConfirmPassword"
+                    ).value;
+
+
+                // Password check
+
+                if (
+                    password !==
+                    confirmPassword
+                ) {
+
+                    showMsg(
+                        message,
+                        "Passwords do not match.",
+                        "error"
+                    );
+                    
+                    document.querySelector('.sign-up-container form').scrollTop = message.offsetTop;
+
+                    return;
+
+                }
+
+
+                // ==================================================
+                // BASIC PAYLOAD & MANUAL VALIDATION
+                // ==================================================
+
+                const regName = document.getElementById("regName").value.trim();
+                const regPhone = document.getElementById("regPhone").value.trim();
+                const regUsername = document.getElementById("regUsername").value.trim();
+
+                if (!regName || !regPhone || !regUsername || !password) {
+                    showMsg(
+                        message,
+                        "Please scroll up and complete all required Personal Information fields.",
+                        "error"
+                    );
+                    
+                    document.querySelector('.sign-up-container form').scrollTop = 0;
+                    return;
+                }
+
+                const payload = {
+
+                    accountType: type,
+
+                    name: regName,
+
+                    full_name: regName,
+
+                    phone: regPhone,
+
+                    email:
+                        document
+                            .getElementById(
+                                "regEmail"
+                            )
+                            .value
+                            .trim(),
+
+                    username: regUsername,
+
+                    password:
+                        password
+
+                };
+
+
+                // ==================================================
+                // DRIVER (Taxi & Bus)
+                // ==================================================
+
+                if (type === "DRIVER" || type === "BUS_DRIVER") {
+
+                    payload.driverNumber =
+                        document
+                            .getElementById(
+                                "driverNumber"
+                            )
+                            .value
+                            .trim();
+
+                    payload.licenseNumber =
+                        document
+                            .getElementById(
+                                "licenseNumber"
+                            )
+                            .value
+                            .trim();
+
+                    payload.numberPlate =
+                        document
+                            .getElementById(
+                                "numberPlate"
+                            )
+                            .value
+                            .trim();
+
+                    payload.taxiNumber =
+                        document
+                            .getElementById(
+                                "taxiNumber"
+                            )
+                            .value
+                            .trim();
+
+                    payload.taxiCapacity =
+                        document
+                            .getElementById(
+                                "taxiCapacity"
+                            )
+                            .value;
+
+
+                    // COMBINE DRIVER FROM AND TO BOXES
+                    const dFrom = document.getElementById("driverFrom").value.trim();
+                    const dTo = document.getElementById("driverTo").value.trim();
+                    if (dFrom && dTo) {
+                        payload.driverRoute = `${dFrom} → ${dTo}`;
+                    } else {
+                        payload.driverRoute = dFrom || dTo;
+                    }
+
+
+                    payload.rankId1 =
+                        document
+                            .getElementById(
+                                "driverRank1"
+                            )
+                            .value;
+
+
+                    payload.rankId2 =
+                        document
+                            .getElementById(
+                                "driverRank2"
+                            )
+                            .value;
+
+
+                    if (!payload.driverRoute) {
+                        showMsg(message, "Please enter the route you drive.", "error");
+                        return;
+                    }
+
+
+                    if (!payload.rankId1) {
+
+                        showMsg(
+                            message,
+                            "Please select your primary rank.",
+                            "error"
+                        );
+
+                        return;
+
+                    }
+
+                }
+
+
+                // ==================================================
+                // RANK ADMIN (Taxi & Bus)
+                // ==================================================
+
+                if (type === "RANK_ADMIN" || type === "BUS_RANK_ADMIN") {
+
+                    const isExisting = document.getElementById("isExistingRankCheck").checked;
+                    payload.rankSetupMode = isExisting ? "JOIN" : "CREATE";
+
+                    // COMBINE ROUTE SERVED FROM AND TO BOXES
+                    const rFrom = document.getElementById("routeFrom").value.trim();
+                    const rTo = document.getElementById("routeTo").value.trim();
+                    if (rFrom && rTo) {
+                        payload.routesServed = `${rFrom} → ${rTo}`;
+                    } else {
+                        payload.routesServed = rFrom || rTo;
+                    }
+
+                    if (!payload.routesServed) {
+                        showMsg(message, "Please enter the route served.", "error");
+                        return;
+                    }
+
+                    if (isExisting) {
+                        payload.existingRankId = document.getElementById("existingRankSelect").value;
+                        if (!payload.existingRankId) {
+                            showMsg(message, "Please select an existing rank to join.", "error");
+                            return;
+                        }
+                    } else {
+                        payload.rankName =
+                            document
+                                .getElementById(
+                                    "rankName"
+                                )
+                                .value
+                                .trim();
+
+                        payload.rankAddress =
+                            document
+                                .getElementById(
+                                    "rankAddress"
+                                )
+                                .value
+                                .trim();
+
+                        payload.openingTime =
+                            document
+                                .getElementById(
+                                    "openingTime"
+                                )
+                                .value;
+
+                        payload.closingTime =
+                            document
+                                .getElementById(
+                                    "closingTime"
+                                )
+                                .value;
+
+                        payload.rankPhone =
+                            document
+                                .getElementById(
+                                    "rankPhone"
+                                )
+                                .value
+                                .trim();
+
+                        payload.whatsappNumber =
+                            document
+                                .getElementById(
+                                    "whatsappNumber"
+                                )
+                                .value
+                                .trim();
+
+
+                        if (!payload.rankName) {
+
+                            showMsg(
+                                message,
+                                "Please enter the rank name.",
+                                "error"
+                            );
+
+                            return;
+
+                        }
+                    }
+
+                }
+
+
+                // ==================================================
+                // SUBMIT
+                // ==================================================
+
+                button.disabled = true;
+
+                button.textContent =
+                    "Submitting...";
+
+
+                try {
+
+                    const response =
+                        await fetch(
+                            `${API_BASE}/api/register`,
+                            {
+                                method: "POST",
+
+                                headers: {
+                                    "Content-Type":
+                                        "application/json"
+                                },
+
+                                body:
+                                    JSON.stringify(
+                                        payload
+                                    )
+                            }
+                        );
+
+
+                    const data =
+                        await response.json();
+
+
+                    if (response.ok) {
+
+                        showMsg(
+                            message,
+                            data.message ||
+                            "Registration successful.",
+                            "success"
+                        );
+
+
+                        document
+                            .getElementById(
+                                "registerForm"
+                            )
+                            .reset();
+
+
+                        selectAccountType(
+                            "GENERAL_USER"
+                        );
+
+
+                        setTimeout(
+                            () => {
+
+                                container.classList.remove(
+                                    "right-panel-active"
+                                );
+
+                            },
+                            1800
+                        );
+
+                    }
+                    else {
+
+                        showMsg(
+                            message,
+                            data.message ||
+                            "Registration failed.",
+                            "error"
+                        );
+
+                    }
+
+                }
+                catch(error) {
+
+                    console.error(
+                        "Registration error:",
+                        error
+                    );
+
+                    showMsg(
+                        message,
+                        "Unable to connect to TaxiFlow server.",
+                        "error"
+                    );
+
+                }
+                finally {
+
+                    button.disabled =
+                        false;
+
+                    updateRegistrationButton();
+
+                }
+
+            }
+        );
+
+
+    // ==================================================
+    // LOGIN
+    // ==================================================
+
+    document
+        .getElementById("loginForm")
+        .addEventListener(
+            "submit",
+            async function(event) {
+
+                event.preventDefault();
+
+
+                const button =
+                    document.getElementById(
+                        "loginBtn"
+                    );
+
+                const message =
+                    document.getElementById(
+                        "loginMsg"
+                    );
+
+
+                message.style.display =
+                    "none";
+
+
+                const payload = {
+
+                    username:
+                        document
+                            .getElementById(
+                                "loginUsername"
+                            )
+                            .value
+                            .trim(),
+
+                    password:
+                        document
+                            .getElementById(
+                                "loginPassword"
+                            )
+                            .value
+
+                };
+
+
+                button.disabled = true;
+
+                button.textContent =
+                    "Signing in...";
+
+
+                try {
+
+                    const response =
+                        await fetch(
+                            `${API_BASE}/api/login`,
+                            {
+                                method: "POST",
+
+                                headers: {
+                                    "Content-Type":
+                                        "application/json"
+                                },
+
+                                body:
+                                    JSON.stringify(
+                                        payload
+                                    )
+                            }
+                        );
+
+
+                    const data =
+                        await response.json();
+
+
+                    if (response.ok) {
+
+                        showMsg(
+                            message,
+                            "Signed in successfully. Redirecting...",
+                            "success"
+                        );
+
+                        // SAVE THE USER UNDER ALL KEYS TO PREVENT BOUNCING
+                        if (data.user) {
+                            const userDataStr = JSON.stringify(data.user);
+                            localStorage.setItem("user", userDataStr);
+                            localStorage.setItem("currentUser", userDataStr);
+                            localStorage.setItem("taxiflow_user", userDataStr);
+                            localStorage.setItem("loggedInUser", userDataStr);
+                            localStorage.setItem("token", "taxiflow-valid-session");
+                        }
+
+                        // Determine redirect path with BUS_RANK_ADMIN handling
+                        let redirectUrl = data.redirect;
+                        if (!redirectUrl) {
+                            const accountType = data.accountType || data.role || data.user?.role; 
+                            if (accountType === "BUS_RANK_ADMIN") redirectUrl = "/bus-rank-admin.html";
+                            else if (accountType === "RANK_ADMIN" || accountType === "TAXI_RANK_ADMIN") redirectUrl = "/rank-admin.html";
+                            else if (accountType === "BUS_DRIVER") redirectUrl = "/bus-driver.html";
+                            else if (accountType === "DRIVER" || accountType === "TAXI_DRIVER") redirectUrl = "/driver.html";
+                            else redirectUrl = "/user.html";
+                        }
+
+                        setTimeout(() => { window.location.href = redirectUrl; }, 1000);
+
+                    }
+                    else {
+
+                        showMsg(
+                            message,
+                            data.message || "Invalid username or password.",
+                            "error"
+                        );
+
+                    }
+
+                }
+                catch(error) {
+
+                    console.error(
+                        "Login error:",
+                        error
+                    );
+
+                    showMsg(
+                        message,
+                        "Unable to connect to TaxiFlow server.",
+                        "error"
+                    );
+
+                }
+                finally {
+
+                    button.disabled =
+                        false;
+
+                    button.textContent =
+                        "Sign In";
+
+                }
+
+            }
+        );
+
+
+    // ==================================================
+    // START
+    // ==================================================
+
+    loadRanks();
+
+    updateRegistrationButton();
+
+</script>
+
+</body>
+</html>

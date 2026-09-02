@@ -1,0 +1,1674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TaxiFlow | Driver Console</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --dark: #0b1220;
+            --dark2: #141d31;
+            --primary: #16a34a;
+            --primary-dark: #15803d;
+            --primary-light: #eafbf1;
+            --amber: #f59e0b;
+            --danger: #ef4444;
+            --surface: #ffffff;
+            --border: #e2e8f0;
+            --text-main: #0f172a;
+            --muted: #64748b;
+            --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f1f5f9;
+            color: var(--text-main);
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+            overflow: hidden;
+        }
+
+        .mono { font-family: 'JetBrains Mono', monospace; }
+
+        /* FLOATING NAVIGATION BAR */
+        .driver-header {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            z-index: 1500;
+            background: rgba(11, 18, 32, 0.92);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 12px 18px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: white;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .nav-left { display: flex; align-items: center; gap: 15px; }
+
+        /* HAMBURGER MENU BUTTON */
+        .hamburger-btn {
+            background: #1f2937;
+            color: white;
+            border: none;
+            width: 42px; height: 42px;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .hamburger-btn:hover { background: #374151; }
+        .hamburger-line { width: 20px; height: 2px; background-color: white; border-radius: 2px; }
+
+        .driver-brand { font-size: 18px; font-weight: 800; }
+        .driver-brand span { color: var(--primary); }
+
+        .driver-status-pill {
+            padding: 6px 12px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .driver-status-pill.online { background: var(--primary-light); color: var(--primary-dark); }
+        .driver-status-pill.offline { background: rgba(255,255,255,0.1); color: #cbd5e1; }
+
+        /* SLIDING SIDEBAR DRAWER */
+        .sidebar-drawer {
+            position: fixed;
+            top: 0; left: -320px;
+            width: 300px; height: 100vh;
+            background: #0b1220;
+            color: white;
+            z-index: 10000;
+            box-shadow: 10px 0 30px rgba(0,0,0,0.5);
+            transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            padding: 24px;
+            overflow-y: auto;
+        }
+        .sidebar-drawer.open { left: 0; }
+        
+        .sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 15px;
+            font-size: 20px;
+            font-weight: 800;
+        }
+        .sidebar-header span { color: #16a34a; }
+        .sidebar-close { background: none; border: none; color: #9ca3af; font-size: 24px; cursor: pointer; }
+        .sidebar-close:hover { color: white; }
+
+        .sidebar-menu { display: flex; flex-direction: column; gap: 10px; flex: 1; }
+        .sidebar-link {
+            background: rgba(255,255,255,0.04);
+            color: #d1d5db;
+            text-decoration: none;
+            padding: 14px 16px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 14px;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .sidebar-link:hover { background: #16a34a; color: white; transform: translateX(4px); }
+
+        .sidebar-overlay {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(3px);
+            z-index: 9999;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .sidebar-overlay.show { opacity: 1; pointer-events: all; }
+
+        /* SEARCH RANKS FLOATING BOX */
+        .search-box-container {
+            position: fixed;
+            top: 90px;
+            left: 15px;
+            right: 15px;
+            max-width: 600px;
+            margin: 0 auto;
+            z-index: 1400;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            padding: 10px 14px;
+            border-radius: 14px;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border);
+        }
+        .search-input { width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 10px; font-size: 14px; outline: none; background: #f8fafc; }
+        .search-results { max-height: 180px; overflow-y: auto; margin-top: 6px; }
+        .search-result-item { padding: 8px 10px; font-size: 13px; border-bottom: 1px solid var(--border); cursor: pointer; color: var(--text-main); }
+        .search-result-item:hover { background: #f1f5f9; }
+
+        /* LIVE COMMUTERS LIST PANEL */
+        .commuters-list-panel {
+            position: fixed;
+            top: 155px;
+            right: 20px;
+            width: 320px;
+            max-height: calc(100vh - 240px);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            border-radius: 16px;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border);
+            z-index: 1350;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .commuters-list-header {
+            background: var(--dark);
+            color: white;
+            padding: 12px 16px;
+            font-size: 13px;
+            font-weight: 800;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .commuters-list-body {
+            padding: 10px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 300px;
+        }
+        .commuter-card-item {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px;
+            font-size: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .commuter-card-item b { color: var(--dark); font-size: 13px; }
+        .commuter-card-item small { color: var(--muted); }
+        .btn-goto-commuter {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 11px;
+            cursor: pointer;
+            text-align: center;
+            transition: 0.2s;
+        }
+        .btn-goto-commuter:hover { background: var(--primary-dark); }
+
+        /* FULLSCREEN MAP BACKGROUND */
+        #driverMap {
+            position: fixed;
+            inset: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1;
+        }
+
+        /* FLOATING ACTION BAR */
+        .action-bar {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1400;
+            background: rgba(17, 24, 39, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 8px;
+            border-radius: 50px;
+            display: flex;
+            gap: 8px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .action-btn {
+            background: transparent; color: white;
+            border: none; padding: 10px 20px;
+            border-radius: 40px; font-size: 13px; font-weight: bold;
+            cursor: pointer; transition: all 0.2s ease;
+            display: flex; align-items: center; gap: 8px;
+            white-space: nowrap;
+        }
+        .action-btn:hover, .action-btn.active { background: #16a34a; }
+
+        /* FLOATING CONTROL DRAWER */
+        /* FLOATING POPUP DIALOG CONSOLE */
+.bottom-drawer {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.95);
+    z-index: 1600;
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 24px;
+    box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+    width: 90%;
+    max-width: 480px;
+    max-height: 85vh;
+    overflow-y: auto;
+    display: none;
+    opacity: 0;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.bottom-drawer.show {
+    display: block;
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+}
+
+        .drawer-handle {
+            width: 40px; height: 4px;
+            background: #cbd5e1; border-radius: 4px;
+            margin: 0 auto 16px; cursor: pointer;
+        }
+
+        /* GLASSMORPHISM LOCK OVERLAY */
+        .lock-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(8px);
+            z-index: 10;
+            border-radius: 24px 24px 0 0;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+            display: none;
+        }
+        .lock-overlay.active { display: flex; }
+
+        .lock-icon { font-size: 32px; margin-bottom: 10px; }
+        .lock-title { font-size: 16px; font-weight: 800; color: var(--dark); margin-bottom: 6px; }
+        .lock-subtitle { font-size: 13px; color: var(--muted); line-height: 1.5; max-width: 280px; }
+
+        .refresh-btn {
+            margin-top: 15px;
+            background: var(--dark); color: white;
+            border: none; padding: 8px 16px;
+            border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer;
+        }
+
+        /* Metrics Grid */
+        .card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+        .metric-card { background: #f8fafc; border: 1px solid var(--border); padding: 14px; border-radius: 14px; text-align: center; cursor: pointer; transition: 0.2s; }
+        .metric-card:hover { border-color: var(--primary); background: #f0fdf4; }
+        .metric-label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; margin-bottom: 4px; }
+        .metric-val { font-size: 24px; font-weight: 800; color: var(--dark); line-height: 1.1; }
+
+        /* DESTINATION BANNER */
+        .destination-banner {
+            display: flex; align-items: center; justify-content: space-between;
+            background: #f0fdf4; border: 1px solid #bbf7d0; padding: 10px 14px;
+            border-radius: 12px; margin-bottom: 14px; font-size: 13px; font-weight: 600; color: var(--primary-dark);
+        }
+
+        /* CAPACITY STEPPER CONTROLS */
+        .stepper-container {
+            display: flex; align-items: center; justify-content: space-between;
+            background: #f8fafc; border: 1px solid var(--border); padding: 10px 16px;
+            border-radius: 14px; margin-bottom: 14px;
+        }
+        .step-btn {
+            width: 42px; height: 42px; border-radius: 10px; border: none;
+            background: var(--dark); color: white; font-size: 20px; font-weight: 800; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .step-btn:active { transform: scale(0.92); }
+
+        .btn-action {
+            width: 100%; padding: 14px; border-radius: 14px; border: none;
+            font-weight: 800; font-size: 15px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px;
+        }
+        .btn-broadcast { background: var(--primary); color: white; box-shadow: 0 4px 15px rgba(22,163,74,0.3); }
+        .btn-broadcast.active { background: var(--danger); box-shadow: 0 4px 15px rgba(239,68,68,0.3); }
+        .btn-dest { background: #3b82f6; color: white; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3); }
+        .btn-panic { background: var(--danger); color: white; box-shadow: 0 4px 15px rgba(239,68,68,0.3); }
+
+        /* STOPPAGE WARNING OVERLAY */
+        .warning-banner {
+            display: none; background: var(--danger); color: white; padding: 12px 16px;
+            border-radius: 12px; font-size: 13px; font-weight: 700; margin-bottom: 14px; text-align: center;
+        }
+        .warning-banner.show { display: block; }
+
+        /* MODALS */
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); z-index: 20000; align-items: center; justify-content: center; padding: 20px; }
+        .modal-box { background: white; width: 100%; max-width: 450px; border-radius: 20px; box-shadow: 0 25px 50px rgba(0,0,0,0.3); overflow: hidden; display: flex; flex-direction: column; }
+        .modal-head { background: var(--dark); color: white; padding: 18px 20px; display: flex; justify-content: space-between; align-items: center; font-weight: 800; }
+        .modal-body { padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+        .modal-select { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 10px; font-size: 14px; outline: none; background: #f8fafc; }
+
+        /* ACCURATE GPS LOCATION MARKER */
+        .user-location-icon {
+            background-color: #3b82f6;
+            border: 3px solid white; border-radius: 50%;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.4);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(59, 130, 246, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+        }
+
+        .commuter-badge {
+            background: #16a34a; color: white; padding: 6px 12px; border-radius: 10px;
+            font-weight: 800; font-size: 12px; border: 2px solid white; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            white-space: nowrap; display: flex; align-items: center; gap: 6px;
+        }
+
+        @media (max-width: 600px) {
+            .commuters-list-panel { left: 15px; right: 15px; width: auto; }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="nearbyHelpBanner" style="display:none; position:fixed; top:85px; left:20px; right:20px; z-index:9999; background:#dc2626; color:white; padding:14px 18px; border-radius:14px; box-shadow:0 10px 30px rgba(0,0,0,0.4); text-align:center; font-weight:800; animation: pulse 1s infinite;">
+        🚨 HELP DRIVER: <span id="helpDriverName">---</span> is stranded or off-route!
+        <div style="margin-top:8px; display:flex; justify-content:center; gap:10px;">
+            <button onclick="routeToHelpDriver()" style="background:white; color:#dc2626; border:none; padding:6px 14px; border-radius:8px; font-weight:800; cursor:pointer;">🧭 Help Driver</button>
+            <button onclick="dismissHelpBanner()" style="background:rgba(255,255,255,0.2); color:white; border:none; padding:6px 14px; border-radius:8px; font-weight:800; cursor:pointer;">Dismiss</button>
+        </div>
+    </div>
+
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+    <div class="sidebar-drawer" id="sidebarDrawer">
+        <div class="sidebar-header">
+            <div>Taxi<span>Flow</span> Menu</div>
+            <button class="sidebar-close" onclick="toggleSidebar()">✕</button>
+        </div>
+        <div class="sidebar-menu">
+    <a href="#" onclick="openDriverConsoleDrawer(); toggleSidebar();" class="sidebar-link">🏠 Home Dashboard</a>
+    <a href="#" onclick="openQueueModal(); toggleSidebar();" class="sidebar-link" style="color:#38bdf8;">📋 View Queue Position</a>
+    <a href="#" onclick="openQrCodeModal(); toggleSidebar();" class="sidebar-link" style="color:#38bdf8;">📥 Download QR Code PDF</a>
+    <a href="#" onclick="openPasscodeModal(); toggleSidebar();" class="sidebar-link" style="color:#f59e0b;">🔑 Set Daily Passcode</a>
+    <a href="#" onclick="openSecondRankModal(); toggleSidebar();" class="sidebar-link" id="secondRankMenuBtn" style="display:none;">🏢 Apply for Second Rank</a>
+    <a href="javascript:logout()" class="sidebar-link" style="margin-top:auto; background:rgba(239, 68, 68, 0.1); color:#f87171;">🚪 Sign Out</a>
+</div>
+    </div>
+
+    <header class="driver-header">
+        <div class="nav-left">
+            <button class="hamburger-btn" onclick="toggleSidebar()" title="Open Menu">
+                <div class="hamburger-line"></div>
+                <div class="hamburger-line"></div>
+                <div class="hamburger-line"></div>
+            </button>
+            <div>
+                <div class="driver-brand">Taxi<span>Flow</span> <small style="font-size:11px; opacity:0.7;">Driver</small></div>
+                <div id="driverName" style="font-size:12px; color:#94a3b8;">Loading driver...</div>
+            </div>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px;">
+            <div id="broadcastStatusPill" class="driver-status-pill offline">Offline</div>
+            <button onclick="logout()" style="background:transparent; border:none; color:#f87171; font-size:13px; font-weight:700; cursor:pointer;">Exit</button>
+        </div>
+    </header>
+
+    <div class="search-box-container">
+        <input type="text" id="rankSearchInput" class="search-input" placeholder="🔍 Search taxi rank by name..." oninput="searchRanks()">
+        <div id="rankSearchResults" class="search-results"></div>
+    </div>
+
+    <div class="commuters-list-panel" id="commutersListPanel">
+        <div class="commuters-list-header">
+            <span>👥 Live Commuters Nearby</span>
+            <span id="commuterCountBadge" style="background:#16a34a; padding:2px 6px; border-radius:6px; font-size:11px;">0 active</span>
+        </div>
+        <div class="commuters-list-body" id="commutersListBody">
+            <small style="color:#94a3b8; text-align:center; padding:10px;">Scanning for live commuters...</small>
+        </div>
+    </div>
+
+    <div id="driverMap"></div>
+
+    <div class="action-bar">
+        <button class="action-btn active" onclick="openDriverConsoleDrawer()">🚗 Driver Console</button>
+        <button class="action-btn" onclick="toggleBroadcast()" id="actionBarLiveBtn">📡 Go Live</button>
+    </div>
+
+    <section class="bottom-drawer" id="bottomDrawer">
+
+        <div id="lockOverlay" class="lock-overlay">
+            <div class="lock-icon">🔒</div>
+            <div class="lock-title">Pending Approval</div>
+            <div class="lock-subtitle">Your Rank Admin is reviewing your application. You can explore the live map while you wait.</div>
+            <button class="refresh-btn" onclick="location.reload()">↻ Refresh Status</button>
+        </div>
+
+        <div class="drawer-handle" onclick="toggleDrawerCollapse()"></div>
+
+        <div id="stoppageAlert" class="warning-banner">
+            ⚠️ Route Deviation / 15-Min Stoppage Alert: Automatically reported to Rank Admin.
+        </div>
+
+        <div id="rankSelectorContainer" style="margin-bottom:12px; display:none;">
+            <label style="font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; display:block; margin-bottom:4px;">Active Rank Association</label>
+            <select id="activeRankSelect" class="modal-select" onchange="switchActiveRankContext()">
+                </select>
+        </div>
+
+        <div class="destination-banner">
+            <span>🏁 Active Target Rank: <strong id="currentDestDisplay">Not Set</strong></span>
+            <button style="background:none; border:none; color:var(--primary); font-weight:700; cursor:pointer; font-size:12px;" onclick="openDestinationPrompt()">Change</button>
+        </div>
+
+        <div class="card-grid">
+            <div class="metric-card" onclick="openQueueModal()" title="Click to view full queue position details">
+                <div class="metric-label">Queue Position</div>
+                <div class="metric-val mono" id="queuePosDisplay" style="color:var(--primary);">--</div>
+                <small id="rankNameDisplay" style="font-size:11px; color:var(--muted);">No Rank</small>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Seats Available</div>
+                <div class="metric-val mono" id="seatsLeftDisplay">--</div>
+                <small id="statusBadge" style="font-size:11px; font-weight:700; color:var(--primary);">NOT FULL</small>
+            </div>
+        </div>
+
+        <div class="stepper-container">
+            <div>
+                <strong style="display:block; font-size:14px;">Passengers Inside</strong>
+                <small style="color:var(--muted); font-size:11px;">Tap to adjust current load</small>
+            </div>
+            <div style="display:flex; align-items:center; gap:14px;">
+                <button class="step-btn" onclick="adjustPassengers(-1)">−</button>
+                <span class="mono" id="passengerCountDisplay" style="font-size:20px; font-weight:800; min-width:24px; text-align:center;">0</span>
+                <button class="step-btn" onclick="adjustPassengers(1)">+</button>
+            </div>
+        </div>
+
+        <button class="btn-action btn-dest" onclick="openDestinationPrompt()">
+            📍 Show on Map & Set Destination
+        </button>
+
+        <button id="broadcastBtn" class="btn-action btn-broadcast" onclick="toggleBroadcast()">
+            📡 Go Online & Broadcast GPS
+        </button>
+
+        <button class="btn-action btn-panic" onclick="triggerPanicAlert()">
+            🚨 Emergency Panic Button
+        </button>
+    </section>
+
+    <div class="modal" id="queueModal">
+        <div class="modal-box">
+            <div class="modal-head">
+                <span>📋 Today's Rank Queue Status</span>
+                <button onclick="closeModal('queueModal')" style="background:none;border:none;color:#9ca3af;font-size:20px;cursor:pointer;">✕</button>
+            </div>
+            <div class="modal-body" id="queueModalBody">
+                <p style="color:var(--muted); text-align:center;">Fetching live queue...</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="passcodeModal">
+    <div class="modal-box" style="text-align:center; max-width:400px;">
+        <div class="modal-head">
+            <span>🔑 Commuter Passcode</span>
+            <button onclick="closeModal('passcodeModal')" style="background:none;border:none;color:#9ca3af;font-size:20px;cursor:pointer;">✕</button>
+        </div>
+        <div class="modal-body" style="align-items:center; gap:12px;">
+            <p style="font-size:13px; color:var(--muted);">Generate a 4-digit passcode for today. Passcodes automatically expire at 23:59.</p>
+            
+            <div style="background:#f8fafc; border:2px dashed #f59e0b; padding:20px; border-radius:14px; width:100%; margin: 15px 0;">
+                <span style="font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase;">Current Active Passcode</span>
+                <div id="currentPasscodeDisplay" class="mono" style="font-size:38px; font-weight:900; color:var(--dark); letter-spacing:8px; margin-top:10px;">----</div>
+                <small id="passcodeStatusNote" style="display:block; margin-top:8px; font-size:11px; color:var(--muted);"></small>
+            </div>
+
+            <button id="generatePasscodeBtn" onclick="generateNewPasscode()" style="background:#f59e0b; color:white; border:none; width:100%; padding:14px; border-radius:12px; font-weight:800; cursor:pointer; font-size:15px; box-shadow:0 4px 15px rgba(245, 158, 11, 0.3);">Generate New Passcode</button>
+        </div>
+    </div>
+</div>
+
+    <div class="modal" id="qrCodeModal">
+        <div class="modal-box" style="text-align:center; max-width:400px;">
+            <div class="modal-head">
+                <span>📥 Download QR Code PDF</span>
+                <button onclick="closeModal('qrCodeModal')" style="background:none;border:none;color:#9ca3af;font-size:20px;cursor:pointer;">✕</button>
+            </div>
+            <div class="modal-body" style="align-items:center; gap:12px;">
+                <p style="font-size:12px; color:var(--muted);">Download your official TaxiFlow QR Safety Card as a PDF to print out and stick inside your taxi.</p>
+                
+                <div id="qrcodeContainer" style="padding:15px; background:white; border:1px solid var(--border); border-radius:12px; display:inline-block; margin: 10px auto;"></div>
+                
+                <div id="driverQrDetails" style="font-size:13px; font-weight:600; color:var(--dark); margin-bottom:10px;">Loading details...</div>
+
+                <button id="downloadPdfBtn" class="btn-action btn-broadcast" style="display:none;" onclick="downloadQrPdf()">📥 Download QR Safety Card (PDF)</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="secondRankModal">
+        <div class="modal-box">
+            <div class="modal-head">
+                <span>🏢 Apply for Second Rank</span>
+                <button onclick="closeModal('secondRankModal')" style="background:none;border:none;color:#9ca3af;font-size:20px;cursor:pointer;">✕</button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size:13px; color:var(--muted);">Drivers are permitted to join up to two registered taxi ranks. Select a second rank below to submit your application.</p>
+                <div style="display:flex; flex-direction:column; gap:6px;">
+                    <label style="font-size:12px; font-weight:700;">Select Secondary Rank</label>
+                    <select id="secondRankSelect" class="modal-select">
+                        <option value="">Loading ranks...</option>
+                    </select>
+                </div>
+                <button class="btn-action btn-broadcast" onclick="submitSecondRankApplication()">Submit Application</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+
+    <script>
+        const API_BASE = "http://localhost:3000";
+        let currentUser = null;
+        let driverData = null;
+        let driverMap = null;
+        let driverGpsMarker = null;
+        let commuterLayer = null;
+        let helpMarkerLayer = null;
+        let activeHelpData = null;
+        let isBroadcasting = false;
+        let watchId = null;
+        let currentPassengers = 0;
+        let maxCapacity = 15;
+        let isApproved = false;
+        let activeDestination = "Not Set";
+        let allRanksList = [];
+        let approvedRanksList = [];
+        let activeRankObj = null;
+        let secondaryRankObj = null;
+        let driverLat = -23.8333;
+        let driverLng = 30.1667;
+        let driverVehicleReg = "N/A";
+
+        let idleTimer = null;
+        let lastLat = null;
+        let lastLng = null;
+        let driverRouteControl = null;
+        let driverRouteTarget = null;
+        let lastStationaryCheckTime = Date.now();
+        let reportedDeviation = false;
+
+        function getLoggedInDriver() {
+            const keys = ["user", "currentUser", "taxiflow_user", "loggedInUser"];
+            for (const key of keys) {
+                const stored = localStorage.getItem(key);
+                if (stored) {
+                    try { return JSON.parse(stored); } catch(e) {}
+                }
+            }
+            return null;
+        }
+
+        function checkDriverAccess() {
+            currentUser = getLoggedInDriver();
+            const role = String(currentUser?.role || "").toUpperCase();
+
+            // STRICTLY accept ONLY TAXI_DRIVER
+            if (!currentUser || role !== "TAXI_DRIVER") {
+                window.location.href = "/login.html";
+                return false;
+            }
+            document.getElementById("driverName").textContent = currentUser.name || currentUser.full_name || "Taxi Driver";
+            return true;
+        }
+
+        function toggleSidebar() {
+            document.getElementById('sidebarDrawer').classList.toggle('open');
+            document.getElementById('sidebarOverlay').classList.toggle('show');
+        }
+
+        function openDriverConsoleDrawer() {
+            document.getElementById('bottomDrawer').classList.toggle('show');
+            if (activeRankObj) {
+                refreshDriverQueuePosition();
+            }
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = "none";
+        }
+
+        /* LEAFLET MAP ENGINE */
+        function initMap() {
+            if (driverMap) return;
+
+            const satelliteHybrid = L.tileLayer("https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}", { maxZoom: 21 });
+            const streetMap = L.tileLayer("https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}", { maxZoom: 21 });
+
+            driverMap = L.map("driverMap", { zoomControl: false, layers: [streetMap] }).setView([driverLat, driverLng], 17);
+            L.control.layers({ "🗺️ Street": streetMap, "🛰️ Satellite": satelliteHybrid }, null, { position: 'topright' }).addTo(driverMap);
+            L.control.zoom({ position: 'bottomright' }).addTo(driverMap);
+
+            commuterLayer = L.layerGroup().addTo(driverMap);
+            helpMarkerLayer = L.layerGroup().addTo(driverMap);
+        }
+
+
+        function openPasscodeModal() {
+    document.getElementById('passcodeModal').style.display = 'flex';
+    // If the driver already generated one this session, display it
+    if (driverData && driverData.daily_passcode) {
+        document.getElementById('currentPasscodeDisplay').textContent = driverData.daily_passcode;
+    } else {
+        document.getElementById('currentPasscodeDisplay').textContent = '----';
+    }
+}
+
+async function generateNewPasscode() {
+    if (!currentUser || !currentUser.id) return;
+
+    // Generate a random 4-digit number
+    const newCode = Math.floor(1000 + Math.random() * 9000).toString();
+    const displayEl = document.getElementById('currentPasscodeDisplay');
+    displayEl.textContent = '...';
+
+    try {
+        const res = await fetch(`${API_BASE}/api/drivers/${currentUser.id}/passcode`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ passcode: newCode })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            displayEl.textContent = data.passcode;
+            if (!driverData) driverData = {};
+            driverData.daily_passcode = data.passcode; // Update the local data memory
+            alert('New passcode generated! Tell this 4-digit code to your passengers today.');
+        } else {
+            alert('Failed to update passcode: ' + (data.message || 'Unknown error'));
+            displayEl.textContent = '----';
+        }
+    } catch(e) {
+        alert('Network error. Could not set passcode.');
+        displayEl.textContent = '----';
+    }
+}
+
+        async function loadDriverData() {
+            try {
+                const res = await fetch(`${API_BASE}/api/drivers/dashboard/${currentUser.id}`);
+                const data = await res.json();
+
+                if (data.success) {
+                    driverData = data;
+                    
+                    if (data.rank) {
+                        isApproved = true;
+                        document.getElementById("lockOverlay").classList.remove("active");
+                        
+                        approvedRanksList = data.approvedRanks || [data.rank];
+                        if (approvedRanksList.length > 0) {
+                            activeRankObj = approvedRanksList[0];
+                            if (approvedRanksList.length > 1) {
+                                secondaryRankObj = approvedRanksList[1];
+                            }
+                        } else {
+                            activeRankObj = data.rank;
+                        }
+
+                        renderRankSelectorUI();
+                        updateActiveDestinationContext();
+
+                        if (data.vehicle) {
+                            maxCapacity = data.vehicle.passenger_capacity || 15;
+                            currentPassengers = data.vehicle.passengers_inside || 0;
+                            updateCapacityUI();
+                        }
+
+                        refreshDriverQueuePosition();
+                    } else {
+                        isApproved = false;
+                        document.getElementById("lockOverlay").classList.add("active");
+                    }
+
+                    await checkDriverMemberships();
+                }
+                
+                loadAllRanksOnMap();
+                trackImmediateLocation();
+                scanNearbyCommuters();
+                setInterval(scanNearbyCommuters, 5000);
+                setInterval(pollHelpAlerts, 4000);
+            } catch (e) {
+                console.error("Dashboard error:", e);
+            }
+        }
+
+        function renderRankSelectorUI() {
+            const container = document.getElementById("rankSelectorContainer");
+            const select = document.getElementById("activeRankSelect");
+            
+            if (approvedRanksList.length > 1) {
+                container.style.display = "block";
+                select.innerHTML = approvedRanksList.map(r => `<option value="${r.id}" ${r.id === activeRankObj?.id ? 'selected' : ''}>${escapeHtml(r.name)}</option>`).join("");
+            } else {
+                container.style.display = "none";
+            }
+        }
+
+        function switchActiveRankContext() {
+            const selectId = document.getElementById("activeRankSelect").value;
+            const found = approvedRanksList.find(r => r.id === selectId);
+            if (found) {
+                activeRankObj = found;
+                updateActiveDestinationContext();
+                refreshDriverQueuePosition();
+            }
+        }
+
+        function updateActiveDestinationContext() {
+            if (activeRankObj) {
+                activeDestination = activeRankObj.name;
+                document.getElementById("currentDestDisplay").textContent = activeDestination;
+                document.getElementById("rankNameDisplay").textContent = activeDestination;
+            }
+        }
+
+        async function refreshDriverQueuePosition() {
+            if (!activeRankObj) return;
+            try {
+                const res = await fetch(`${API_BASE}/api/rank-admin/queue/${activeRankObj.id}?adminId=DRIVER_VIEW`);
+                const data = await res.json();
+                if (data.success && data.queue) {
+                    const myId = currentUser.id;
+                    const waitingList = data.queue.filter(q => q.status === "WAITING");
+                    const myPositionObj = waitingList.find(q => 
+                        String(q.driver_id) === String(myId) || 
+                        String(q.driverId) === String(myId) ||
+                        String(q.driver_name || "").toLowerCase() === String(currentUser.name || currentUser.full_name || "").toLowerCase()
+                    );
+
+                    if (myPositionObj) {
+                        document.getElementById("queuePosDisplay").textContent = `#${myPositionObj.queue_position}`;
+                    } else {
+                        const outObj = data.queue.find(q => (q.driver_id === myId || q.driverId === myId) && q.status === "OUT");
+                        if (outObj) {
+                            document.getElementById("queuePosDisplay").textContent = "OUT";
+                            if (secondaryRankObj && activeRankObj.id !== secondaryRankObj.id) {
+                                activeRankObj = secondaryRankObj;
+                                updateActiveDestinationContext();
+                                alert(`Admin marked you OUT. Automatically switched active target rank to second rank: ${activeRankObj.name}`);
+                            }
+                        } else {
+                            document.getElementById("queuePosDisplay").textContent = "--";
+                        }
+                    }
+                }
+            } catch(e) {
+                console.error("Failed to refresh queue position:", e);
+            }
+        }
+
+        async function checkDriverMemberships() {
+            try {
+                const res = await fetch(`${API_BASE}/api/drivers/memberships?driverId=${currentUser.id}`);
+                const data = await res.json();
+                if (data.success) {
+                    let memberships = data.memberships || [];
+                    if (memberships.length < 2) {
+                        document.getElementById("secondRankMenuBtn").style.display = "flex";
+                    }
+                }
+            } catch(e) {
+                document.getElementById("secondRankMenuBtn").style.display = "flex";
+            }
+        }
+
+        async function loadAllRanksOnMap() {
+            try {
+                const res = await fetch(`${API_BASE}/api/ranks`);
+                const data = await res.json();
+                allRanksList = data.ranks || [];
+            } catch (e) {}
+        }
+
+        function searchRanks() {
+            const query = document.getElementById("rankSearchInput").value.toLowerCase().trim();
+            const resultsBox = document.getElementById("rankSearchResults");
+            if (!query || !allRanksList) {
+                resultsBox.innerHTML = "";
+                return;
+            }
+
+            const matches = allRanksList.filter(r => r.name.toLowerCase().includes(query) || (r.address && r.address.toLowerCase().includes(query)));
+            
+            resultsBox.innerHTML = matches.map(r => `
+                <div class="search-result-item" onclick="focusOnRank(${r.latitude}, ${r.longitude}, '${escapeJs(r.name)}')">
+                    <strong>${escapeHtml(r.name)}</strong><br><small style="color:gray;">${escapeHtml(r.address || '')}</small>
+                </div>
+            `).join("");
+        }
+
+        function focusOnRank(lat, lng, name) {
+            if (!lat || !lng) { alert("Rank location unavailable."); return; }
+            driverMap.setView([lat, lng], 18);
+            L.popup().setLatLng([lat, lng]).setContent(`<strong>${name}</strong>`).openOn(driverMap);
+            document.getElementById("rankSearchResults").innerHTML = "";
+            document.getElementById("rankSearchInput").value = name;
+        }
+
+        function trackImmediateLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(pos => {
+                    driverLat = pos.coords.latitude;
+                    driverLng = pos.coords.longitude;
+                    
+                    const userIcon = L.divIcon({ className: 'user-location-icon', iconSize: [18, 18] });
+                    if (!driverGpsMarker) {
+                        driverGpsMarker = L.marker([driverLat, driverLng], { icon: userIcon }).addTo(driverMap);
+                        driverGpsMarker.bindPopup("<b>You are here (Driver)</b>").openPopup();
+                    } else {
+                        driverGpsMarker.setLatLng([driverLat, driverLng]);
+                    }
+                    driverMap.setView([driverLat, driverLng], 19, { animate: true });
+                }, err => {
+                    console.warn("Geolocation warning:", err);
+                }, { enableHighAccuracy: true });
+            }
+        }
+
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371;
+            const dLat = (lat2 - lat1) * (Math.PI / 180);
+            const dLon = (lon2 - lon1) * (Math.PI / 180);
+            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+        }
+
+        /* EMERGENCY PANIC BUTTON */
+        async function triggerPanicAlert() {
+            if (!confirm("⚠️ EMERGENCY PANIC: This will instantly broadcast your live GPS location and distress alert to all nearby drivers and your rank admins. Proceed?")) return;
+
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(async pos => {
+                    driverLat = pos.coords.latitude;
+                    driverLng = pos.coords.longitude;
+
+                    try {
+                        await fetch(`${API_BASE}/api/drivers/panic`, {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                                driver_id: currentUser.id,
+                                name: currentUser.name || currentUser.full_name || "Driver",
+                                latitude: driverLat,
+                                longitude: driverLng
+                            })
+                        });
+                        alert("🚨 Emergency panic alert dispatched! Nearby drivers and rank admins have been alerted.");
+                    } catch(e) {
+                        alert("Panic alert dispatched.");
+                    }
+                });
+            }
+        }
+
+        /* HELP DRIVER ALERTS (PUBLISHED DEVIATION/STOPPAGE BY ADMIN) */
+        async function pollHelpAlerts() {
+            if (!driverMap) return;
+            try {
+                const res = await fetch(`${API_BASE}/api/drivers/help/active`);
+                const data = await res.json();
+
+                if (data.success && data.alerts && data.alerts.length > 0) {
+                    const helpItem = data.alerts.find(a => a.driver_id !== currentUser?.id);
+                    if (helpItem) {
+                        activeHelpData = helpItem;
+                        document.getElementById("helpDriverName").textContent = helpItem.driver_name;
+                        document.getElementById("nearbyHelpBanner").style.display = "block";
+
+                        if (helpMarkerLayer) {
+                            helpMarkerLayer.clearLayers();
+                            const helpIcon = L.divIcon({
+                                className: 'help-marker',
+                                html: `<div style="background:#dc2626; color:white; padding:8px 14px; border-radius:12px; font-weight:900; font-size:13px; border:3px solid white; box-shadow:0 0 20px rgba(220,38,38,0.8); white-space:nowrap;">🚨 HELP DRIVER: ${escapeHtml(helpItem.driver_name)}</div>`,
+                                iconSize: [180, 40],
+                                iconAnchor: [90, 20]
+                            });
+
+                            L.marker([helpItem.latitude, helpItem.longitude], { icon: helpIcon })
+                                .bindPopup(`<b>🚨 HELP DRIVER</b><br>Driver: ${escapeHtml(helpItem.driver_name)} needs assistance!<br><button onclick="routeToHelpDriver()" style="background:#dc2626; color:white; border:none; padding:6px; border-radius:6px; font-weight:800; margin-top:6px; cursor:pointer;">🧭 Help Driver</button>`)
+                                .addTo(helpMarkerLayer);
+                        }
+                        return;
+                    }
+                }
+                dismissHelpBanner();
+            } catch(e) {}
+        }
+
+        function routeToHelpDriver() {
+            if (!activeHelpData) return;
+            routeToCommuter(activeHelpData.latitude, activeHelpData.longitude, activeHelpData.driver_name + " (HELP DRIVER)");
+        }
+
+        function dismissHelpBanner() {
+            document.getElementById("nearbyHelpBanner").style.display = "none";
+            if (helpMarkerLayer) helpMarkerLayer.clearLayers();
+        }
+
+        async function openQueueModal() {
+            if (!activeRankObj) {
+                alert("You are not currently approved at any rank.");
+                return;
+            }
+            const modal = document.getElementById("queueModal");
+            const body = document.getElementById("queueModalBody");
+            modal.style.display = "flex";
+            body.innerHTML = `<p style="color:var(--muted); text-align:center;">Fetching live queue...</p>`;
+
+            try {
+                const res = await fetch(`${API_BASE}/api/rank-admin/queue/${activeRankObj.id}?adminId=DRIVER_VIEW`);
+                const data = await res.json();
+
+                if (data.success && data.queue && data.queue.length > 0) {
+                    const myId = currentUser.id;
+                    const myName = (currentUser.name || currentUser.full_name || "").toLowerCase().trim();
+                    const waitingList = data.queue.filter(q => q.status === "WAITING");
+                    
+                    const myPositionObj = waitingList.find(q => {
+                        const qDriverId = String(q.driver_id || q.driverId || "");
+                        const qDriverName = String(q.driver_name || "").toLowerCase().trim();
+                        return qDriverId === String(myId) || (myName && qDriverName.includes(myName));
+                    });
+
+                    body.innerHTML = `
+                        <div style="background:#f0fdf4; border:1px solid #bbf7d0; padding:12px; border-radius:12px; text-align:center; margin-bottom:10px;">
+                            <span style="font-size:12px; color:var(--primary-dark); font-weight:700;">YOUR POSITION TODAY (${activeRankObj.name})</span>
+                            <div style="font-size:28px; font-weight:900; color:var(--primary);">${myPositionObj ? '#' + myPositionObj.queue_position : 'Not in queue'}</div>
+                        </div>
+                        <b style="font-size:13px; color:var(--dark);">Rank Queue Order (${waitingList.length} waiting):</b>
+                        <div style="max-height:220px; overflow-y:auto; display:flex; flex-direction:column; gap:6px;">
+                            ${waitingList.map((q, idx) => `
+                                <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 12px; background:#f8fafc; border:1px solid var(--border); border-radius:8px; font-size:13px;">
+                                    <div><b>#${idx + 1}</b> - ${escapeHtml(q.registration || q.vehicle_registration || 'Taxi')}</div>
+                                    <small style="color:var(--muted);">${escapeHtml(q.driver_name || 'Driver')}</small>
+                                </div>
+                            `).join("")}
+                        </div>
+                    `;
+                } else {
+                    body.innerHTML = `<p style="text-align:center; color:var(--muted); padding:20px;">The queue is currently empty for today.</p>`;
+                }
+            } catch (e) {
+                body.innerHTML = `<p style="text-align:center; color:var(--danger);">Failed to load queue details.</p>`;
+            }
+        }
+
+        async function openQrCodeModal() {
+            const modal = document.getElementById("qrCodeModal");
+            const container = document.getElementById("qrcodeContainer");
+            const detailsDiv = document.getElementById("driverQrDetails");
+            const downloadBtn = document.getElementById("downloadPdfBtn");
+            
+            modal.style.display = "flex";
+            container.innerHTML = "";
+            downloadBtn.style.display = "none";
+            detailsDiv.textContent = "Generating QR code...";
+
+            try {
+                const res = await fetch(`${API_BASE}/api/drivers/qr-code/${currentUser.id}`);
+                const data = await res.json();
+
+                if (data.success) {
+                    driverVehicleReg = data.vehicle?.registration_number || 'N/A';
+                    detailsDiv.innerHTML = `
+                        <small style="color:var(--muted); font-size:14px; font-weight:700;">Vehicle Reg: ${escapeHtml(driverVehicleReg)}</small>
+                    `;
+
+                    new QRCode(container, {
+                        text: data.qrPayload,
+                        width: 170,
+                        height: 170,
+                        colorDark: "#0b1220",
+                        colorLight: "#ffffff",
+                        correctLevel: QRCode.CorrectLevel.H
+                    });
+
+                    setTimeout(() => {
+                        downloadBtn.style.display = "flex";
+                    }, 300);
+                } else {
+                    detailsDiv.textContent = "Failed to load driver details for QR.";
+                }
+            } catch(e) {
+                detailsDiv.textContent = "Server error generating QR code.";
+            }
+        }
+
+        function downloadQrPdf() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({
+                orientation: "portrait",
+                unit: "mm",
+                format: "a4"
+            });
+
+            const pageWidth = 210;
+            const cardWidth = 105;
+            const cardHeight = 135;
+            const startX = (pageWidth - cardWidth) / 2;
+            const startY = 32;
+
+            // Card Container Box
+            doc.setFillColor(255, 255, 255);
+            doc.setDrawColor(11, 18, 32);
+            doc.setLineWidth(0.8);
+            doc.roundedRect(startX, startY, cardWidth, cardHeight, 6, 6, "FD");
+
+            // Header Brand
+            doc.setFont("Helvetica", "bold");
+            doc.setFontSize(20);
+            doc.setTextColor(11, 18, 32);
+            doc.text("TAXIFLOW", pageWidth / 2, startY + 16, { align: "center" });
+
+            doc.setFontSize(8.5);
+            doc.setTextColor(22, 163, 74);
+            doc.text("COMMUTER SAFETY & VERIFICATION QR", pageWidth / 2, startY + 22.5, { align: "center" });
+
+            // Grab QR Image
+            const canvas = document.querySelector("#qrcodeContainer canvas");
+            const img = document.querySelector("#qrcodeContainer img");
+            let qrDataUrl = "";
+            if (canvas) {
+                qrDataUrl = canvas.toDataURL("image/png");
+            } else if (img) {
+                qrDataUrl = img.src;
+            }
+
+            if (qrDataUrl) {
+                const qrSize = 65;
+                doc.addImage(qrDataUrl, "PNG", pageWidth / 2 - qrSize / 2, startY + 28, qrSize, qrSize);
+            }
+
+            // Vehicle Registration Badge (No Name)
+            doc.setFillColor(234, 251, 241);
+            doc.setDrawColor(187, 247, 208);
+            doc.roundedRect(startX + 15, startY + 98, cardWidth - 30, 10, 3, 3, "FD");
+
+            doc.setFont("Helvetica", "bold");
+            doc.setFontSize(11);
+            doc.setTextColor(21, 128, 61);
+            doc.text(`REG: ${driverVehicleReg}`, pageWidth / 2, startY + 104.5, { align: "center" });
+
+            // Divider Line
+            doc.setDrawColor(203, 213, 225);
+            doc.setLineWidth(0.3);
+            doc.line(startX + 12, startY + 112, startX + cardWidth - 12, startY + 112);
+
+            // Footer Text
+            doc.setFont("Helvetica", "normal");
+            doc.setFontSize(7.5);
+            doc.setTextColor(100, 116, 139);
+            const disclaimer = "Scan this QR code using the TaxiFlow App to review vehicle credentials or submit transit safety feedback.";
+            doc.text(doc.splitTextToSize(disclaimer, cardWidth - 20), pageWidth / 2, startY + 118, { align: "center" });
+
+            // Output Download PDF
+            doc.save(`TaxiFlow-Safety-Card-${driverVehicleReg.replace(/\s+/g, '-')}.pdf`);
+        }
+
+        async function openSecondRankModal() {
+    const modal = document.getElementById("secondRankModal");
+    const select = document.getElementById("secondRankSelect");
+    modal.style.display = "flex";
+    select.innerHTML = `<option value="">Loading allowed ranks...</option>`;
+
+    try {
+        const res = await fetch(`${API_BASE}/api/ranks`);
+        const data = await res.json();
+        
+        if (data.success && data.ranks) {
+            // Determine driver category based on currentUser role
+            const driverRole = String(currentUser?.role || "").toUpperCase();
+            
+            // Filter ranks strictly based on driver type
+            const filteredRanks = data.ranks.filter(r => {
+                const name = String(r.name || "").toLowerCase();
+                if (driverRole === "TAXI_DRIVER") {
+                    // Exclude bus ranks for taxi drivers
+                    return !name.includes("bus");
+                } else if (driverRole === "BUS_DRIVER") {
+                    // Exclude taxi ranks for bus drivers
+                    return name.includes("bus") || name.includes("station");
+                }
+                return true;
+            });
+
+            if (filteredRanks.length === 0) {
+                select.innerHTML = `<option value="">No compatible ranks found</option>`;
+                return;
+            }
+
+            select.innerHTML = filteredRanks.map(r => `
+                <option value="${r.id}">${escapeHtml(r.name)} (${escapeHtml(r.address || 'Local')})</option>
+            `).join("");
+        } else {
+            select.innerHTML = `<option value="">No ranks available</option>`;
+        }
+    } catch(e) {
+        select.innerHTML = `<option value="">Failed to load ranks</option>`;
+    }
+}
+
+        async function submitSecondRankApplication() {
+    const rankId = document.getElementById("secondRankSelect").value;
+    if (!rankId) { alert("Please select a rank."); return; }
+
+    const payload = { driver_id: currentUser.id, rank_id: rankId };
+    console.log("🚀 [FRONTEND] Submitting second rank application with payload:", payload);
+
+    try {
+        // NOTE THE 'S' IN drivers BELOW:
+        const res = await fetch(`${API_BASE}/api/drivers/rank-application`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+        
+        console.log("📥 [FRONTEND] Response status:", res.status);
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+            alert("Application submitted successfully to the second rank admin for approval!");
+            closeModal("secondRankModal");
+        } else {
+            alert(data.message || "Failed to submit second rank application.");
+        }
+    } catch(e) {
+        console.error("❌ [FRONTEND] Fetch error:", e);
+        alert("Server error submitting application.");
+    }
+}
+
+        /* SCAN NEARBY COMMUTERS */
+        async function scanNearbyCommuters() {
+            if (!commuterLayer) return;
+            commuterLayer.clearLayers();
+
+            const listBody = document.getElementById("commutersListBody");
+            const countBadge = document.getElementById("commuterCountBadge");
+
+            try {
+                const res = await fetch(`${API_BASE}/api/ranks/commuter/live/active`);
+                const data = await res.json();
+
+                if (data.success && data.commuters && data.commuters.length > 0) {
+                    let validCommuters = data.commuters.map(c => {
+                        const distKm = calculateDistance(driverLat, driverLng, c.latitude, c.longitude);
+                        const estMinutes = Math.max(1, Math.round((distKm / 30) * 60));
+                        return { ...c, distKm, estMinutes };
+                    }).filter(c => c.distKm <= 5.0);
+
+                    validCommuters.sort((a, b) => a.distKm - b.distKm);
+                    countBadge.textContent = `${validCommuters.length} active`;
+
+                    if (validCommuters.length === 0) {
+                        listBody.innerHTML = `<small style="color:#94a3b8; text-align:center; padding:10px;">No live commuters within 5 km.</small>`;
+                        return;
+                    }
+
+                    listBody.innerHTML = validCommuters.map(c => {
+                        const commuterIcon = L.divIcon({
+                            className: 'custom-commuter-icon',
+                            html: `<div class="commuter-badge">👤 ${escapeHtml(c.name)} ➔ ${escapeHtml(c.destination)}</div>`,
+                            iconSize: [140, 32],
+                            iconAnchor: [70, 16]
+                        });
+
+                        L.marker([c.latitude, c.longitude], { icon: commuterIcon })
+                            .bindPopup(`
+                                <b>👤 Live Commuter</b>
+                                <p>Destination: <b>${escapeHtml(c.destination)}</b></p>
+                                <p>${c.distKm.toFixed(1)} km away (${c.estMinutes} mins)</p>
+                                <button onclick="routeToCommuter(${Number(c.latitude)}, ${Number(c.longitude)}, '${escapeJs(c.name || 'Commuter')}')" style="width:100%;background:#16a34a;color:white;border:none;padding:9px 12px;border-radius:9px;font-weight:800;cursor:pointer;">🧭 ROUTE TO COMMUTER</button>
+                            `)
+                            .addTo(commuterLayer);
+
+                        return `
+                            <div class="commuter-card-item">
+                                <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                                    <div>
+                                        <b>👤 ${escapeHtml(c.name)}</b>
+                                        <small style="display:block;">Going to: <b>${escapeHtml(c.destination)}</b></small>
+                                    </div>
+                                    <span style="background:#eafbf1; color:#15803d; padding:2px 6px; border-radius:4px; font-weight:800; font-size:11px;">${c.distKm.toFixed(1)} km (~${c.estMinutes}m)</span>
+                                </div>
+                                <button class="btn-goto-commuter" onclick="routeToCommuter(${Number(c.latitude)}, ${Number(c.longitude)}, '${escapeJs(c.name || 'Commuter')}')">🧭 Go to Commuter</button>
+                            </div>
+                        `;
+                    }).join("");
+
+                } else {
+                    countBadge.textContent = `0 active`;
+                    listBody.innerHTML = `<small style="color:#94a3b8; text-align:center; padding:10px;">No live commuters right now.</small>`;
+                }
+            } catch (e) {
+                console.error("Error scanning nearby commuters:", e);
+            }
+        }
+
+        function routeToCommuter(lat, lng, commuterName = "Commuter") {
+            if (!driverMap) return;
+            if (!Number.isFinite(Number(lat)) || !Number.isFinite(Number(lng))) {
+                alert("This commuter does not have a valid GPS location.");
+                return;
+            }
+            if (!navigator.geolocation) {
+                alert("GPS is not supported by this browser.");
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(pos => {
+                driverLat = pos.coords.latitude;
+                driverLng = pos.coords.longitude;
+                driverRouteTarget = { lat: Number(lat), lng: Number(lng), name: commuterName };
+
+                if (driverRouteControl) {
+                    driverMap.removeControl(driverRouteControl);
+                    driverRouteControl = null;
+                }
+
+                driverRouteControl = L.Routing.control({
+                    waypoints: [
+                        L.latLng(driverLat, driverLng),
+                        L.latLng(Number(lat), Number(lng))
+                    ],
+                    routeWhileDragging: false,
+                    addWaypoints: false,
+                    draggableWaypoints: false,
+                    fitSelectedRoutes: true,
+                    showAlternatives: false,
+                    createMarker: function(i, wp) {
+                        if (i === 0) return L.marker(wp.latLng).bindPopup("<b>🚕 You are here</b>");
+                        return L.marker(wp.latLng).bindPopup(`<b>👤 ${escapeHtml(commuterName)}</b><br>Live location`);
+                    },
+                    lineOptions: {
+                        styles: [{ color: "#2563eb", weight: 7, opacity: 0.85 }]
+                    }
+                }).on('routesfound', e => {
+                    const route = e.routes[0];
+                    const km = (route.summary.totalDistance / 1000).toFixed(1);
+                    const min = Math.max(1, Math.round(route.summary.totalTime / 60));
+                    alert(`Route found: ${km} km, about ${min} min.`);
+                }).on('routingerror', () => {
+                    alert("Could not calculate the route. Check your internet connection.");
+                }).addTo(driverMap);
+
+                driverMap.setView([driverLat, driverLng], 16, { animate: true });
+            }, () => {
+                alert("Please allow GPS access so TaxiFlow can calculate the route.");
+            }, { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 });
+        }
+
+        function clearDriverRoute() {
+            if (driverRouteControl && driverMap) {
+                driverMap.removeControl(driverRouteControl);
+                driverRouteControl = null;
+            }
+            driverRouteTarget = null;
+        }
+
+        function openDestinationPrompt() {
+            const dest = prompt("Where are you going? (Type commuter destination):", activeDestination);
+            if (dest !== null) {
+                activeDestination = dest.trim() || "Not Set";
+                document.getElementById("currentDestDisplay").textContent = activeDestination;
+                
+                if (isBroadcasting) {
+                    sendLocationUpdate();
+                }
+            }
+        }
+
+        function updateCapacityUI() {
+            const seatsLeft = Math.max(0, maxCapacity - currentPassengers);
+            document.getElementById("passengerCountDisplay").textContent = currentPassengers;
+            document.getElementById("seatsLeftDisplay").textContent = seatsLeft;
+
+            const badge = document.getElementById("statusBadge");
+            if (seatsLeft === 0) {
+                badge.textContent = "FULL";
+                badge.style.color = "var(--danger)";
+            } else {
+                badge.textContent = "NOT FULL";
+                badge.style.color = "var(--primary)";
+            }
+        }
+
+        async function adjustPassengers(amount) {
+            const next = currentPassengers + amount;
+            if (next < 0 || next > maxCapacity) return;
+
+            currentPassengers = next;
+            updateCapacityUI();
+
+            try {
+                await fetch(`${API_BASE}/api/drivers/capacity`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        driver_id: currentUser.id,
+                        passengers_inside: currentPassengers
+                    })
+                });
+            } catch (e) {
+                console.error("Capacity sync error:", e);
+            }
+        }
+
+        async function dispatchTaxiOut(driverId, vehicleReg) {
+    console.log("Taxi Out clicked for:", driverId, vehicleReg); // This will now show in your console!
+
+    if (!currentRank || !currentRank.id) {
+        alert("Rank info missing. Please refresh.");
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_BASE}/api/rank-admin/trips/start`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                driver_id: String(driverId),
+                vehicle_reg: String(vehicleReg),
+                origin_rank_id: currentRank.id,
+                destination_rank_id: null // Will be updated if a destination is selected
+            })
+        });
+
+        const data = await response.json();
+        
+        if (data.success) {
+            alert("Success! Taxi dispatched and live GPS tracking initialized.");
+            // Optional: Refresh your queue list here to remove the dispatched car
+            if (typeof loadTaxiQueue === 'function') loadTaxiQueue();
+        } else {
+            alert("Failed to dispatch: " + (data.message || "Unknown error"));
+        }
+    } catch (err) {
+        console.error("Network or server error dispatching taxi:", err);
+        alert("Network error connecting to server.");
+    }
+}
+        function toggleBroadcast() {
+            if (!isApproved) {
+                alert("Your account is pending rank admin approval.");
+                return;
+            }
+            if (!isBroadcasting) {
+                startBroadcasting();
+            } else {
+                stopBroadcasting();
+            }
+        }
+
+        function startBroadcasting() {
+            if (!navigator.geolocation) {
+                alert("Location services are not supported by your device.");
+                return;
+            }
+
+            isBroadcasting = true;
+            const btn = document.getElementById("broadcastBtn");
+            btn.textContent = "🛑 Stop Broadcasting (Go Offline)";
+            btn.classList.add("active");
+
+            const actionBarLiveBtn = document.getElementById("actionBarLiveBtn");
+            if (actionBarLiveBtn) {
+                actionBarLiveBtn.textContent = "🛑 Go Offline";
+                actionBarLiveBtn.classList.add("active");
+            }
+
+            const pill = document.getElementById("broadcastStatusPill");
+            pill.textContent = "Live Online";
+            pill.className = "driver-status-pill online";
+
+            lastStationaryCheckTime = Date.now();
+
+            watchId = navigator.geolocation.watchPosition(
+                pos => {
+                    driverLat = pos.coords.latitude;
+                    driverLng = pos.coords.longitude;
+
+                    const userIcon = L.divIcon({ className: 'user-location-icon', iconSize: [18, 18] });
+                    if (!driverGpsMarker) {
+                        driverGpsMarker = L.marker([driverLat, driverLng], { icon: userIcon }).addTo(driverMap);
+                    } else {
+                        driverGpsMarker.setLatLng([driverLat, driverLng]);
+                    }
+                    driverMap.setView([driverLat, driverLng], 19, { animate: true });
+
+                    lastLat = driverLat;
+                    lastLng = driverLng;
+                    sendLocationUpdate(driverLat, driverLng);
+                    checkStoppageAndDeviation(driverLat, driverLng);
+
+                    // ARRIVAL CHECK AT DESTINATION RANK (Within 200m)
+                    const targetRankLat = activeRankObj?.latitude;
+                    const targetRankLng = activeRankObj?.longitude;
+
+                    if (targetRankLat && targetRankLng) {
+                        const distToDestinationRank = calculateDistance(driverLat, driverLng, targetRankLat, targetRankLng);
+                        if (distToDestinationRank <= 0.2) {
+                            console.log("Destination rank reached!");
+                        }
+                    }
+                },
+                err => console.warn(err),
+                { enableHighAccuracy: true, maximumAge: 0 }
+            );
+        }
+
+        async function sendLocationUpdate(lat, lng) {
+            if (!lat || !lng) {
+                if (!lastLat || !lastLng) return;
+                lat = lastLat;
+                lng = lastLng;
+            }
+
+            const seatsLeft = Math.max(0, maxCapacity - currentPassengers);
+
+            try {
+                await fetch(`${API_BASE}/api/drivers/location`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        driver_id: currentUser.id,
+                        latitude: lat,
+                        longitude: lng,
+                        destination: activeDestination,
+                        is_full: seatsLeft === 0,
+                        passengers_inside: currentPassengers,
+                        show_on_map: true
+                    })
+                });
+            } catch (e) {
+                console.error("Location broadcast error:", e);
+            }
+        }
+
+        function stopBroadcasting() {
+            if (watchId) navigator.geolocation.clearWatch(watchId);
+            isBroadcasting = false;
+
+            const btn = document.getElementById("broadcastBtn");
+            btn.textContent = "📡 Go Online & Broadcast GPS";
+            btn.classList.remove("active");
+
+            const actionBarLiveBtn = document.getElementById("actionBarLiveBtn");
+            if (actionBarLiveBtn) {
+                actionBarLiveBtn.textContent = "📡 Go Live";
+                actionBarLiveBtn.classList.remove("active");
+            }
+
+            const pill = document.getElementById("broadcastStatusPill");
+            pill.textContent = "Offline";
+            pill.className = "driver-status-pill offline";
+
+            fetch(`${API_BASE}/api/drivers/location`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    driver_id: currentUser.id,
+                    latitude: null,
+                    longitude: null,
+                    show_on_map: false
+                })
+            });
+
+            clearTimeout(idleTimer);
+            document.getElementById("stoppageAlert").classList.remove("show");
+        }
+
+        /* 15-MINUTE STOPPAGE & ROUTE DEVIATION AUTOMATED REPORTING */
+        function checkStoppageAndDeviation(lat, lng) {
+            if (lastLat !== null && lastLng !== null) {
+                const distMoved = Math.hypot(lat - lastLat, lng - lastLng);
+
+                if (distMoved < 0.0002 && currentPassengers > 0) {
+                    if (!idleTimer) {
+                        idleTimer = setTimeout(() => {
+                            triggerDeviationReport("Vehicle idle on road for 15+ minutes with passengers.");
+                        }, 15 * 60 * 1000);
+                    }
+                } else if (activeRankObj && activeRankObj.latitude && activeRankObj.longitude) {
+                    const distToRank = calculateDistance(lat, lng, activeRankObj.latitude, activeRankObj.longitude);
+                    if (distToRank > 15.0 && currentPassengers > 0 && !reportedDeviation) {
+                        triggerDeviationReport(`Vehicle traveling far off-route away from target rank (${distToRank.toFixed(1)} km away).`);
+                    }
+                }
+            }
+        }
+
+
+        // Start tracking driver GPS position when active
+function startDriverGpsTracker(driverId) {
+    if (!navigator.geolocation) {
+        console.warn("Geolocation is not supported by this browser.");
+        return;
+    }
+
+    // Ping server every 15 seconds with current location
+    setInterval(() => {
+        navigator.geolocation.getCurrentPosition(async (position) => {
+            try {
+                const res = await fetch(`${API_BASE}/api/drivers/update-gps`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        driver_id: driverId,
+                        latitude: position.coords.latitude,
+                        longitude: position.coords.longitude
+                    })
+                });
+                const data = await res.json();
+                if (data.alert) {
+                    console.log("Trip Alert:", data.alert);
+                }
+            } catch (err) {
+                console.error("Failed to send GPS ping:", err);
+            }
+        }, (error) => {
+            console.error("GPS position error:", error);
+        }, { enableHighAccuracy: true });
+    }, 15000);
+}
+
+        async function triggerDeviationReport(reason) {
+            reportedDeviation = true;
+            document.getElementById("stoppageAlert").classList.add("show");
+
+            try {
+                await fetch(`${API_BASE}/api/drivers/deviation-report`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        driver_id: currentUser.id,
+                        rank_id: activeRankObj?.id,
+                        description: reason,
+                        latitude: driverLat,
+                        longitude: driverLng
+                    })
+                });
+            } catch(e) {
+                console.error("Failed to send deviation report:", e);
+            }
+        }
+
+        function escapeHtml(val) { return String(val ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;"); }
+        function escapeJs(val) { return String(val ?? "").replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/\n/g, "\\n").replace(/\r/g, "\\r"); }
+
+        function logout() {
+            clearDriverRoute();
+            stopBroadcasting();
+            localStorage.clear();
+            window.location.href = "/login.html";
+        }
+
+        document.addEventListener("DOMContentLoaded", async () => {
+            if (checkDriverAccess()) {
+                initMap();
+                await loadDriverData();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>TaxiFlow | Super Admin</title>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap');
+
+        :root {
+            --ink: #0b1220;
+            --ink-soft: #141d31;
+            --rail-line: #232e46;
+
+            --paper: #eef1f4;
+            --surface: #ffffff;
+            --border: #e2e6ec;
+
+            --text: #101828;
+            --text-muted: #64748b;
+            --text-faint: #94a3b8;
+
+            --brand: #16a34a;
+            --brand-dark: #15803d;
+            --brand-soft: #eafbf1;
+
+            --amber: #f2a33c;
+            --amber-soft: #fef3e2;
+
+            --danger: #ef4444;
+            --danger-soft: #fee2e2;
+
+            --radius: 12px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--paper);
+            color: var(--text);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 250px;
+            height: 100vh;
+            background: var(--ink);
+            color: white;
+            padding: 26px 16px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo-row {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            margin-bottom: 3px;
+            padding: 0 6px;
+        }
+
+        .logo-mark {
+            width: 9px;
+            height: 9px;
+            border-radius: 2px;
+            background: var(--brand);
+            box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.18);
+            flex-shrink: 0;
+        }
+
+        .logo {
+            font-size: 18px;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+
+        .admin-label {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            color: var(--text-faint);
+            margin: 4px 0 28px 6px;
+        }
+
+        .nav-section-label {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            color: #4b5875;
+            padding: 0 12px;
+            margin-bottom: 8px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            padding: 11px 12px;
+            margin-bottom: 2px;
+            border-radius: 8px;
+            font-size: 13.5px;
+            font-weight: 500;
+            color: #aab4c8;
+            cursor: pointer;
+            border-left: 2px solid transparent;
+            transition: background 0.15s, color 0.15s;
+        }
+
+        .nav-item .dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: currentColor;
+            opacity: 0.5;
+            flex-shrink: 0;
+        }
+
+        .nav-item:hover {
+            background: var(--ink-soft);
+            color: white;
+        }
+
+        .nav-item.active {
+            background: var(--ink-soft);
+            color: white;
+            border-left: 2px solid var(--brand);
+        }
+
+        .nav-item.active .dot {
+            background: var(--brand);
+            opacity: 1;
+            box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.22);
+        }
+
+        .sidebar-spacer {
+            flex: 1;
+        }
+
+        .logout {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--rail-line);
+            border-radius: 8px;
+            background: transparent;
+            color: #cbd5e1;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.15s, border-color 0.15s, color 0.15s;
+        }
+
+        .logout:hover {
+            background: var(--danger-soft);
+            border-color: var(--danger);
+            color: var(--danger);
+        }
+
+        .main {
+            margin-left: 250px;
+            padding: 32px 36px 60px;
+            max-width: 1280px;
+        }
+
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 28px;
+            gap: 20px;
+        }
+
+        .topbar .eyebrow {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            color: var(--brand-dark);
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .topbar h1 {
+            font-size: 26px;
+            font-weight: 800;
+            letter-spacing: -0.01em;
+        }
+
+        .topbar p {
+            font-size: 13.5px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 9px 16px 9px 9px;
+            border-radius: 999px;
+            font-size: 13.5px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .profile-avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--brand), var(--brand-dark));
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .page-section {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .page-section.active-section {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 26px;
+        }
+
+        .stat-card {
+            background: var(--ink);
+            border-radius: var(--radius);
+            padding: 20px 20px 18px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--stat-color, var(--brand));
+        }
+
+        .stat-card h3 {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: #8290a8;
+            margin-bottom: 14px;
+        }
+
+        .stat-card .number {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 34px;
+            font-weight: 700;
+            color: white;
+            letter-spacing: -0.01em;
+            line-height: 1;
+        }
+
+        .stat-card .unit {
+            font-size: 11px;
+            color: #8290a8;
+            font-weight: 500;
+            margin-top: 8px;
+        }
+
+        .stat-card:nth-child(1) { --stat-color: #16a34a; }
+        .stat-card:nth-child(2) { --stat-color: #f2a33c; }
+        .stat-card:nth-child(3) { --stat-color: #3b82f6; }
+        .stat-card:nth-child(4) { --stat-color: #a855f7; }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 16px;
+        }
+
+        .panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 22px;
+            margin-bottom: 20px;
+        }
+
+        .panel-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .panel h2 {
+            font-size: 15px;
+            font-weight: 700;
+        }
+
+        .panel .count-pill {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 700;
+            background: var(--brand-soft);
+            color: var(--brand-dark);
+            padding: 3px 9px;
+            border-radius: 999px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px;
+        }
+
+        th, td {
+            padding: 14px 10px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            font-size: 10.5px;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--text-faint);
+        }
+
+        td {
+            font-size: 13.5px;
+            vertical-align: middle;
+        }
+
+        td.id-cell {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .status {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 700;
+            background: var(--brand-soft);
+            color: var(--brand-dark);
+            text-transform: uppercase;
+        }
+
+        .status::before {
+            content: "";
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        .status.PENDING { background: var(--amber-soft); color: #b45309; }
+        .status.SUSPENDED { background: var(--danger-soft); color: #b91c1c; }
+        .status.REJECTED { background: var(--danger-soft); color: #b91c1c; }
+
+        .empty {
+            text-align: center;
+            padding: 34px 10px;
+            color: var(--text-faint);
+            font-size: 13px;
+        }
+
+        .action-btns {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn {
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-success { background: var(--brand-soft); color: var(--brand-dark); border: 1px solid #bbf7d0; }
+        .btn-success:hover { background: var(--brand); color: white; }
+
+        .btn-danger { background: var(--danger-soft); color: var(--danger); border: 1px solid #fecaca; }
+        .btn-danger:hover { background: var(--danger); color: white; }
+
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-muted); }
+        .btn-outline:hover { background: #f1f5f9; color: var(--text); }
+
+        .sys-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 13px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .sys-row:last-child {
+            border-bottom: none;
+            padding-bottom: 2px;
+        }
+
+        .sys-label {
+            font-size: 13.5px;
+            font-weight: 500;
+            color: var(--text);
+        }
+
+        .sys-label span {
+            display: block;
+            font-size: 11.5px;
+            color: var(--text-faint);
+            font-weight: 400;
+            margin-top: 1px;
+        }
+
+        .pulse-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 6px;
+            background: var(--text-faint);
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .status-badge[data-state="online"] {
+            background: var(--brand-soft);
+            color: var(--brand-dark);
+        }
+
+        .status-badge[data-state="online"] .pulse-dot {
+            background: var(--brand);
+            box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.2);
+            animation: pulse 1.8s ease-in-out infinite;
+        }
+
+        .status-badge[data-state="offline"] {
+            background: var(--danger-soft);
+            color: #b91c1c;
+        }
+
+        .status-badge[data-state="offline"] .pulse-dot {
+            background: var(--danger);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.35; }
+        }
+
+        .toast {
+            position: fixed;
+            top: -100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            color: var(--text);
+            padding: 12px 24px;
+            border-radius: 8px;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+            font-size: 14px;
+            font-weight: 600;
+            z-index: 9999;
+            transition: top 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-left: 4px solid var(--brand);
+        }
+
+        .toast.show { top: 20px; }
+
+        @media (max-width: 900px) {
+            .sidebar { width: 210px; }
+            .main { margin-left: 210px; }
+            .stats { grid-template-columns: repeat(2, 1fr); }
+            .content-grid { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 600px) {
+            .sidebar { position: relative; width: 100%; height: auto; padding: 20px 16px; }
+            .sidebar-spacer { display: none; }
+            .logout { margin-top: 16px; }
+            .main { margin-left: 0; padding: 20px 16px 40px; }
+            .stats { grid-template-columns: 1fr 1fr; }
+            .topbar { align-items: flex-start; gap: 14px; flex-direction: column; }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="toast" class="toast">Action completed successfully</div>
+
+    <aside class="sidebar">
+        <div class="logo-row">
+            <span class="logo-mark"></span>
+            <span class="logo">TaxiFlow</span>
+        </div>
+
+        <div class="admin-label">
+            SUPER ADMIN CONSOLE
+        </div>
+
+        <div class="nav-section-label">Overview</div>
+        <div class="nav-item active" onclick="showSection('dashboardSection', this)"><span class="dot"></span> Dashboard</div>
+        <div class="nav-item" onclick="showSection('approvalsSection', this)">
+            <span class="dot"></span> Approvals 
+            <span id="pendingBadge" style="background:var(--danger); color:white; border-radius:999px; padding:2px 6px; font-size:10px; margin-left:auto; display:none;">0</span>
+        </div>
+
+        <div class="nav-section-label" style="margin-top: 18px;">Network</div>
+        <div class="nav-item" onclick="showSection('rankAdminsSection', this)"><span class="dot"></span> Rank Administrators</div>
+        <div class="nav-item" onclick="showSection('driversSection', this)"><span class="dot"></span> Drivers</div>
+
+        <div class="sidebar-spacer"></div>
+
+        <button class="logout" onclick="logout()">Log out</button>
+    </aside>
+
+    <main class="main">
+
+        <div class="topbar">
+            <div>
+                <div class="eyebrow">System overview</div>
+                <h1>Super Admin Dashboard</h1>
+                <p>Live status across every rank, driver and taxi on TaxiFlow.</p>
+            </div>
+
+            <div class="profile">
+                <span class="profile-avatar" id="profileAvatar">–</span>
+                <span id="profile">Loading...</span>
+            </div>
+        </div>
+
+        <!-- DASHBOARD -->
+        <section id="dashboardSection" class="page-section active-section">
+            <div class="stats">
+                <div class="stat-card">
+                    <h3>Taxi Ranks</h3>
+                    <div class="number mono" id="rankCount">0</div>
+                    <div class="unit">registered</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Drivers</h3>
+                    <div class="number mono" id="driverCount">0</div>
+                    <div class="unit">on the network</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Users</h3>
+                    <div class="number mono" id="userCount">0</div>
+                    <div class="unit">app accounts</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Taxis</h3>
+                    <div class="number mono" id="taxiCount">0</div>
+                    <div class="unit">on the road</div>
+                </div>
+            </div>
+
+            <div class="content-grid">
+                <div class="panel">
+                    <div class="panel-head">
+                        <h2>Network Overview</h2>
+                        <button class="btn btn-outline" onclick="showSection('approvalsSection', document.querySelectorAll('.nav-item')[1])">View Approvals →</button>
+                    </div>
+                    <p style="color:var(--text-muted); font-size:14px; margin-bottom:20px;">
+                        Welcome to the master control panel. Use the sidebar to navigate through pending approvals, rank administrators, and driver directories.
+                    </p>
+                </div>
+
+                <div class="panel">
+                    <h2>System Status</h2>
+                    <div class="sys-row">
+                        <div class="sys-label">Backend<span>API server</span></div>
+                        <span class="status-badge" id="backendStatus" data-state="checking"><span class="pulse-dot"></span> Checking</span>
+                    </div>
+                    <div class="sys-row">
+                        <div class="sys-label">Database<span>Supabase connection</span></div>
+                        <span class="status-badge" id="databaseStatus" data-state="checking"><span class="pulse-dot"></span> Checking</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- APPROVALS -->
+        <section id="approvalsSection" class="page-section">
+            <div class="panel">
+                <div class="panel-head">
+                    <h2>Pending Account Approvals</h2>
+                    <span class="count-pill" id="pendingCountPill">0</span>
+                </div>
+                <p style="color:var(--text-muted); font-size:13px;">Review and approve new Rank Administrators and Drivers requesting to join the network.</p>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Account Type</th>
+                            <th>Name</th>
+                            <th>Details / Route</th>
+                            <th>Date Requested</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="approvalsTable">
+                        <tr><td colspan="5" class="empty">Loading pending approvals...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- RANK ADMINISTRATORS -->
+        <section id="rankAdminsSection" class="page-section">
+            <div class="panel">
+                <div class="panel-head">
+                    <h2>Rank Administrators</h2>
+                    <span class="count-pill" id="ranksCountPill">0</span>
+                </div>
+                <p style="color:var(--text-muted); font-size:13px;">Directory of all Rank Administrators managing local taxi ranks.</p>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name & Contact</th>
+                            <th>Assigned Rank / Route</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ranksTable">
+                        <tr><td colspan="4" class="empty">Loading network data...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- DRIVERS -->
+        <section id="driversSection" class="page-section">
+            <div class="panel">
+                <div class="panel-head">
+                    <h2>Network Drivers</h2>
+                    <span class="count-pill" id="allDriversCountPill">0</span>
+                </div>
+                <p style="color:var(--text-muted); font-size:13px;">Directory of all registered taxi drivers across the system.</p>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Driver Name</th>
+                            <th>Vehicle Reg</th>
+                            <th>Phone</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="allDriversTable">
+                        <tr><td colspan="5" class="empty">Loading driver data...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        const API_BASE = "http://localhost:3000";
+        let allRankAdmins = [];
+        let allDrivers = [];
+
+        function checkAdmin() {
+            const keys = ["user", "currentUser", "taxiflow_user", "loggedInUser", "taxiflowUser"];
+            let user = null;
+
+            for (const key of keys) {
+                const stored = localStorage.getItem(key);
+                if (stored) {
+                    try { user = JSON.parse(stored); break; } catch(e) {}
+                }
+            }
+
+            if (!user) {
+                window.location.href = "/login.html";
+                return null;
+            }
+
+            if (user.role !== "SUPER_ADMIN") {
+                alert("Access denied. Super Admin privileges required.");
+                window.location.href = "/login.html";
+                return null;
+            }
+
+            const displayName = user.name || user.full_name || user.username || "Admin";
+            document.getElementById("profile").textContent = displayName;
+            document.getElementById("profileAvatar").textContent = displayName.slice(0, 1).toUpperCase();
+
+            return user;
+        }
+
+        function showSection(sectionId, clickedElement) {
+            document.querySelectorAll('.page-section').forEach(sec => sec.classList.remove('active-section'));
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+
+            document.getElementById(sectionId).classList.add('active-section');
+            if(clickedElement) clickedElement.classList.add('active');
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById("toast");
+            toast.textContent = "✓ " + message;
+            toast.classList.add("show");
+            setTimeout(() => toast.classList.remove("show"), 3000);
+        }
+
+        async function loadDashboardData() {
+            try {
+                document.getElementById("backendStatus").setAttribute("data-state", "online");
+                document.getElementById("backendStatus").innerHTML = `<span class="pulse-dot"></span>Online`;
+                document.getElementById("databaseStatus").setAttribute("data-state", "online");
+                document.getElementById("databaseStatus").innerHTML = `<span class="pulse-dot"></span>Online`;
+
+                const statsResponse = await fetch(`${API_BASE}/api/admin/dashboard`);
+                const statsData = await statsResponse.json();
+
+                if (statsData.success) {
+                    const stats = statsData.stats;
+                    document.getElementById("rankCount").textContent = stats.ranks.total || 0;
+                    document.getElementById("driverCount").textContent = stats.drivers.total || 0;
+                    document.getElementById("userCount").textContent = stats.users.total || 0;
+                    document.getElementById("taxiCount").textContent = stats.taxis.total || 0;
+                }
+
+                const [adminsRes, driversRes] = await Promise.all([
+                    fetch(`${API_BASE}/api/admin/rank-admins`),
+                    fetch(`${API_BASE}/api/admin/drivers`)
+                ]);
+
+                const adminsData = await adminsRes.json();
+                const driversData = await driversRes.json();
+
+                allRankAdmins = adminsData.success ? (adminsData.rankAdmins || []) : [];
+                allDrivers = driversData.success ? (driversData.drivers || []) : [];
+
+                renderAllTables();
+
+            } catch (error) {
+                console.error("Dashboard error:", error);
+                document.getElementById("backendStatus").setAttribute("data-state", "offline");
+                document.getElementById("backendStatus").innerHTML = `<span class="pulse-dot"></span>Offline`;
+                document.getElementById("databaseStatus").setAttribute("data-state", "offline");
+                document.getElementById("databaseStatus").innerHTML = `<span class="pulse-dot"></span>Offline`;
+            }
+        }
+
+        function renderAllTables() {
+            renderApprovals();
+            renderRankAdmins();
+            renderDrivers();
+        }
+
+        // --- 1. APPROVALS TABLE ---
+        function renderApprovals() {
+            const pendingAdmins = allRankAdmins.filter(a => a.account_status === "PENDING");
+            const pendingDrivers = allDrivers.filter(d => d.account_status === "PENDING");
+            
+            const totalPending = pendingAdmins.length + pendingDrivers.length;
+            document.getElementById("pendingCountPill").textContent = totalPending;
+            
+            const badge = document.getElementById("pendingBadge");
+            if (totalPending > 0) {
+                badge.textContent = totalPending;
+                badge.style.display = "inline-block";
+            } else {
+                badge.style.display = "none";
+            }
+
+            const tbody = document.getElementById("approvalsTable");
+            if (totalPending === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="empty">No pending approvals required.</td></tr>`;
+                return;
+            }
+
+            let html = "";
+            
+            pendingAdmins.forEach(admin => {
+                const date = new Date(admin.created_at).toLocaleDateString();
+                
+                // INTELLIGENTLY DISPLAY RANK OR ROUTE BEING JOINED
+                let detailsText = "Unassigned Rank";
+                if (admin.rank && admin.rank.name) {
+                    detailsText = `Rank: <strong>${escapeHtml(admin.rank.name)}</strong>`;
+                }
+                if (admin.managed_route) {
+                    detailsText += `<br>Route: <span style="color:var(--brand-dark); font-weight:600;">${escapeHtml(admin.managed_route)}</span>`;
+                }
+
+                html += `
+                    <tr>
+                        <td><strong>🏢 Rank Admin</strong></td>
+                        <td>
+                            <strong>${escapeHtml(admin.full_name || admin.username)}</strong><br>
+                            <span style="font-size:12px; color:var(--text-muted);">${escapeHtml(admin.email)}</span>
+                        </td>
+                        <td>${detailsText}</td>
+                        <td>${date}</td>
+                        <td>
+                            <div class="action-btns">
+                                <button class="btn btn-success" onclick="updateAccountStatus('${admin.id}', 'rank-admins', 'approve')">Approve</button>
+                                <button class="btn btn-danger" onclick="updateAccountStatus('${admin.id}', 'rank-admins', 'reject')">Reject</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            pendingDrivers.forEach(driver => {
+                const date = new Date(driver.created_at).toLocaleDateString();
+                const vehicleReg = driver.vehicle ? driver.vehicle.registration_number : "No Vehicle";
+                const routeInfo = driver.managed_route ? `<br>Route: <span style="color:var(--text-muted);">${escapeHtml(driver.managed_route)}</span>` : "";
+
+                html += `
+                    <tr>
+                        <td><strong>🚕 Driver</strong></td>
+                        <td>
+                            <strong>${escapeHtml(driver.full_name || driver.username)}</strong><br>
+                            <span style="font-size:12px; color:var(--text-muted);">${escapeHtml(driver.phone)}</span>
+                        </td>
+                        <td>Vehicle: <strong>${escapeHtml(vehicleReg)}</strong>${routeInfo}</td>
+                        <td>${date}</td>
+                        <td>
+                            <div class="action-btns">
+                                <button class="btn btn-success" onclick="updateAccountStatus('${driver.id}', 'drivers', 'approve')">Approve</button>
+                                <button class="btn btn-danger" onclick="updateAccountStatus('${driver.id}', 'drivers', 'reject')">Reject</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            tbody.innerHTML = html;
+        }
+
+        // --- 2. RANK ADMINS TABLE ---
+        function renderRankAdmins() {
+            document.getElementById("ranksCountPill").textContent = allRankAdmins.length;
+            const tbody = document.getElementById("ranksTable");
+
+            if (allRankAdmins.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="empty">No Rank Administrators found.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = allRankAdmins.map(admin => {
+                const rankName = admin.rank ? admin.rank.name : "Unassigned";
+                const routeInfo = admin.managed_route ? `<br><small style="color:var(--text-muted);">Route: ${escapeHtml(admin.managed_route)}</small>` : "";
+                const isPending = admin.account_status === "PENDING";
+                const isSuspended = admin.account_status === "SUSPENDED" || admin.account_status === "REJECTED";
+                
+                return `
+                    <tr>
+                        <td>
+                            <strong>${escapeHtml(admin.full_name || admin.username)}</strong><br>
+                            <span style="font-size:12px; color:var(--text-muted);">${escapeHtml(admin.email)} | ${escapeHtml(admin.phone)}</span>
+                        </td>
+                        <td><strong>${escapeHtml(rankName)}</strong>${routeInfo}</td>
+                        <td><span class="status ${admin.account_status}">${escapeHtml(admin.account_status)}</span></td>
+                        <td>
+                            <div class="action-btns">
+                                ${isPending ? `
+                                    <button class="btn btn-success" onclick="updateAccountStatus('${admin.id}', 'rank-admins', 'approve')">Approve</button>
+                                ` : isSuspended ? `
+                                    <button class="btn btn-outline" onclick="updateAccountStatus('${admin.id}', 'rank-admins', 'restore')">Restore</button>
+                                ` : `
+                                    <button class="btn btn-outline" onclick="updateAccountStatus('${admin.id}', 'rank-admins', 'suspend')">Suspend</button>
+                                `}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join("");
+        }
+
+        // --- 3. DRIVERS TABLE ---
+        function renderDrivers() {
+            document.getElementById("allDriversCountPill").textContent = allDrivers.length;
+            const tbody = document.getElementById("allDriversTable");
+
+            if (allDrivers.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="empty">No Drivers found.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = allDrivers.map(driver => {
+                const vehicleReg = driver.vehicle ? driver.vehicle.registration_number : "N/A";
+                const isPending = driver.account_status === "PENDING";
+                const isSuspended = driver.account_status === "SUSPENDED" || driver.account_status === "REJECTED";
+                
+                return `
+                    <tr>
+                        <td>
+                            <strong>${escapeHtml(driver.full_name || driver.username)}</strong><br>
+                            <span style="font-size:12px; color:var(--text-muted);">${escapeHtml(driver.email)}</span>
+                        </td>
+                        <td class="id-cell">${escapeHtml(vehicleReg)}</td>
+                        <td>${escapeHtml(driver.phone)}</td>
+                        <td><span class="status ${driver.account_status}">${escapeHtml(driver.account_status)}</span></td>
+                        <td>
+                            <div class="action-btns">
+                                ${isPending ? `
+                                    <button class="btn btn-success" onclick="updateAccountStatus('${driver.id}', 'drivers', 'approve')">Approve</button>
+                                ` : isSuspended ? `
+                                    <button class="btn btn-outline" onclick="updateAccountStatus('${driver.id}', 'drivers', 'restore')">Restore</button>
+                                ` : `
+                                    <button class="btn btn-outline" onclick="updateAccountStatus('${driver.id}', 'drivers', 'suspend')">Suspend</button>
+                                `}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join("");
+        }
+
+        async function updateAccountStatus(userId, roleRoute, action) {
+            const actionText = action === 'approve' ? 'approve' : action === 'restore' ? 'restore' : action === 'reject' ? 'reject' : 'suspend';
+            
+            if (!confirm(`Are you sure you want to ${actionText} this account?`)) return;
+
+            try {
+                const res = await fetch(`${API_BASE}/api/admin/${roleRoute}/${userId}/${action}`, {
+                    method: 'PATCH'
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    showToast(`Account successfully ${actionText}ed!`);
+                    loadDashboardData();
+                } else {
+                    alert("Error: " + data.message);
+                }
+            } catch (err) {
+                console.error("Action error:", err);
+                alert("Failed to update account status. Check server connection.");
+            }
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? "")
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = "/login.html";
+        }
+
+        const currentUser = checkAdmin();
+        if (currentUser) {
+            loadDashboardData();
+        }
+    </script>
+</body>
+</html>

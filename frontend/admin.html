@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaxiFlow | Rank Admin Console</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap');
+        :root {
+            --ink: #0b1220; --ink-soft: #141d31; --rail-line: #232e46;
+            --paper: #eef1f4; --surface: #ffffff; --border: #e2e6ec;
+            --text: #101828; --text-muted: #64748b; --text-faint: #94a3b8;
+            --brand: #16a34a; --brand-dark: #15803d; --brand-soft: #eafbf1;
+            --amber: #f2a33c; --amber-soft: #fef3e2;
+            --danger: #ef4444; --danger-soft: #fee2e2;
+            --radius: 12px;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', sans-serif; background: var(--paper); color: var(--text); -webkit-font-smoothing: antialiased; }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        .sidebar { position: fixed; left: 0; top: 0; width: 250px; height: 100vh; background: var(--ink); color: white; padding: 26px 16px; display: flex; flex-direction: column; }
+        .logo-row { display: flex; align-items: center; gap: 9px; margin-bottom: 3px; padding: 0 6px; }
+        .logo-mark { width: 9px; height: 9px; border-radius: 2px; background: var(--brand); box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.18); flex-shrink: 0; }
+        .logo { font-size: 18px; font-weight: 800; letter-spacing: -0.02em; }
+        .admin-label { font-size: 10px; font-weight: 700; letter-spacing: 0.12em; color: var(--text-faint); margin: 4px 0 28px 6px; }
+        .nav-section-label { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; color: #4b5875; padding: 0 12px; margin-bottom: 8px; }
+        .nav-item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 11px 12px; margin-bottom: 2px; border-radius: 8px; font-size: 13.5px; font-weight: 500; color: #aab4c8; cursor: pointer; border-left: 2px solid transparent; transition: background 0.15s, color 0.15s; }
+        .nav-item .dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: 0.5; flex-shrink: 0; }
+        .nav-item:hover { background: var(--ink-soft); color: white; }
+        .nav-item.active { background: var(--ink-soft); color: white; border-left: 2px solid var(--brand); }
+        .nav-item.active .dot { background: var(--brand); opacity: 1; box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.22); }
+        .sidebar-spacer { flex: 1; }
+        .logout { width: 100%; padding: 12px; border: 1px solid var(--rail-line); border-radius: 8px; background: transparent; color: #cbd5e1; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.15s, border-color 0.15s, color 0.15s; }
+        .logout:hover { background: var(--danger-soft); border-color: var(--danger); color: var(--danger); }
+        .main { margin-left: 250px; padding: 32px 36px 60px; max-width: 1280px; }
+        .topbar { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 28px; gap: 20px; }
+        .topbar .eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; color: var(--brand-dark); text-transform: uppercase; margin-bottom: 6px; }
+        .topbar h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.01em; }
+        .topbar p { font-size: 13.5px; color: var(--text-muted); margin-top: 4px; }
+        .profile { display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--border); padding: 9px 16px 9px 9px; border-radius: 999px; font-size: 13.5px; font-weight: 600; white-space: nowrap; }
+        .profile-avatar { width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, var(--brand), var(--brand-dark)); color: white; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+        .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 26px; }
+        .stat-card { background: var(--ink); border-radius: var(--radius); padding: 20px; position: relative; overflow: hidden; }
+        .stat-card::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--stat-color, var(--brand)); }
+        .stat-card h3 { font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #8290a8; margin-bottom: 14px; }
+        .stat-card .number { font-family: 'JetBrains Mono', monospace; font-size: 34px; font-weight: 700; color: white; line-height: 1; }
+        .stat-card .unit { font-size: 11px; color: #8290a8; font-weight: 500; margin-top: 8px; }
+        .content-grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: 16px; margin-bottom: 20px; }
+        .panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; }
+        .panel-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+        .panel h2 { font-size: 15px; font-weight: 700; }
+        .map-container { width: 100%; height: 320px; background: #111827; border-radius: 8px; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; color: #9ca3af; font-size: 13px; border: 1px solid var(--border); }
+        .map-radar { position: absolute; width: 180px; height: 180px; border: 1px dashed rgba(22, 163, 74, 0.4); border-radius: 50%; animation: spin 10s linear infinite; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+        th, td { padding: 12px 6px; text-align: left; border-bottom: 1px solid var(--border); font-size: 13.5px; }
+        th { font-size: 10.5px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-faint); }
+        td.id-cell { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-muted); }
+        .status { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; background: var(--brand-soft); color: var(--brand-dark); }
+        .status::before { content: ""; width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+        .empty { text-align: center; padding: 34px 10px; color: var(--text-faint); font-size: 13px; }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="logo-row"><span class="logo-mark"></span><span class="logo">TaxiFlow</span></div>
+        <div class="admin-label">RANK ADMIN PORTAL</div>
+        <div class="nav-section-label">Management</div>
+        <div class="nav-item active"><span class="dot"></span>Rank Overview</div>
+        <div class="nav-item" onclick="switchTab('drivers')"><span class="dot"></span>Rank Drivers</div>
+        <div class="nav-item" onclick="switchTab('taxis')"><span class="dot"></span>Active Taxis</div>
+        <div class="nav-item" onclick="switchTab('map')"><span class="dot"></span>Rank Map & GPS</div>
+        <div class="sidebar-spacer"></div>
+        <button class="logout" onclick="logout()">Log out</button>
+    </aside>
+
+    <main class="main">
+        <div class="topbar">
+            <div>
+                <div class="eyebrow">Rank Operations</div>
+                <h1 id="rankTitle">Rank Administrator</h1>
+                <p>Supervise rank queues, assigned drivers, and live availability.</p>
+            </div>
+            <div class="profile">
+                <span class="profile-avatar" id="profileAvatar">–</span>
+                <span id="profile">Loading...</span>
+            </div>
+        </div>
+
+        <section class="stats">
+            <div class="stat-card" style="--stat-color: #16a34a;">
+                <h3>Assigned Drivers</h3>
+                <div class="number mono" id="driverCount">0</div>
+                <div class="unit">at this rank</div>
+            </div>
+            <div class="stat-card" style="--stat-color: #f2a33c;">
+                <h3>Rank Taxis</h3>
+                <div class="number mono" id="taxiCount">0</div>
+                <div class="unit">registered vehicles</div>
+            </div>
+            <div class="stat-card" style="--stat-color: #3b82f6;">
+                <h3>Queue Status</h3>
+                <div class="number mono" style="font-size: 22px; padding-top: 6px;" id="rankStatusText">OPEN</div>
+                <div class="unit">operational state</div>
+            </div>
+        </section>
+
+        <section class="content-grid">
+            <div class="panel">
+                <div class="panel-head">
+                    <h2>Rank Map & Spatial Tracking</h2>
+                    <span class="status" data-state="online">Live GPS Feed</span>
+                </div>
+                <p style="font-size: 12.5px; color: var(--text-muted); margin-bottom: 12px;">Real-time perimeter tracking for rank departures and incoming vehicles.</p>
+                <div class="map-container">
+                    <div class="map-radar"></div>
+                    <div style="z-index: 2; text-align: center;">
+                        📍 <strong id="mapRankName">Rank Control Center</strong><br>
+                        <span style="font-size: 11.5px; color: #6b7280;">GPS Coordinates Active • Monitoring Queue Matrix</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h2>Rank Quick Actions</h2>
+                <div style="margin-top: 14px; display: flex; flex-direction: column; gap: 10px;">
+                    <button onclick="toggleRankStatus()" style="padding: 12px; background: var(--brand); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">Toggle Rank Open/Closed</button>
+                    <button onclick="alert('Driver assignment portal open in network grid.')" style="padding: 12px; background: var(--paper); color: var(--text); border: 1px solid var(--border); border-radius: 8px; font-weight: 600; cursor: pointer;">Manage Incoming Drivers</button>
+                </div>
+            </div>
+        </section>
+
+        <section class="panel">
+            <div class="panel-head">
+                <h2>Drivers Registered to This Rank</h2>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Driver Name</th>
+                        <th>Email / Contact</th>
+                        <th>Taxi Registration</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="driversTable">
+                    <tr><td colspan="4" class="empty">Loading rank drivers...</td></tr>
+                </tbody>
+            </table>
+        </section>
+    </main>
+
+    <script>
+        const API = "/api";
+        function checkAdmin() {
+            const user = JSON.parse(localStorage.getItem("taxiflowUser") || "null");
+            if (!user || user.role !== "RANK_ADMIN") {
+                window.location.href = "/login.html";
+                return null;
+            }
+            const name = user.name || user.username;
+            document.getElementById("profile").textContent = name;
+            document.getElementById("profileAvatar").textContent = name.slice(0, 1).toUpperCase();
+            document.getElementById("rankTitle").textContent = `${user.rankName || 'Assigned'} Rank Dashboard`;
+            document.getElementById("mapRankName").textContent = user.rankName || 'Rank Location Hub';
+            return user;
+        }
+
+        async function loadRankData() {
+            try {
+                const user = checkAdmin();
+                if (!user) return;
+                const res = await fetch(`${API}/rank-admin/data?rankId=${user.rankId || ''}`);
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById("driverCount").textContent = data.drivers?.length || 0;
+                    document.getElementById("taxiCount").textContent = data.taxis?.length || 0;
+                    const tbody = document.getElementById("driversTable");
+                    if (!data.drivers || data.drivers.length === 0) {
+                        tbody.innerHTML = `<tr><td colspan="4" class="empty">No drivers registered under this rank yet.</td></tr>`;
+                        return;
+                    }
+                    tbody.innerHTML = data.drivers.map(d => `
+                        <tr>
+                            <td><strong>${d.name || d.username}</strong></td>
+                            <td class="id-cell">${d.email}</td>
+                            <td class="id-cell">${d.taxiReg || 'Unassigned'}</td>
+                            <td><span class="status">${d.status || 'Active'}</span></td>
+                        </tr>
+                    `).join("");
+                }
+            } catch (e) {
+                console.error("Error loading rank data:", e);
+            }
+        }
+
+        function toggleRankStatus() {
+            const el = document.getElementById("rankStatusText");
+            el.textContent = el.textContent === "OPEN" ? "CLOSED" : "OPEN";
+            alert(`Rank operational status updated to: ${el.textContent}`);
+        }
+
+        function switchTab(tab) {
+            if(tab === 'map') { window.scrollTo({top: 300, behavior: 'smooth'}); }
+        }
+
+        function logout() {
+            localStorage.removeItem("taxiflowUser");
+            window.location.href = "/login.html";
+        }
+
+        checkAdmin();
+        loadRankData();
+    </script>
+</body>
+</html>
