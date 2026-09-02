@@ -1,0 +1,56 @@
+JWT additions for the two routes pasted in chat
+================================================
+
+adminRoutes.js
+--------------
+Add this directly after the Supabase require:
+
+const { verifyToken, allowRoles } = require("../middleware/authenticateToken");
+router.use(verifyToken, allowRoles("SUPER_ADMIN"));
+
+This protects the complete admin router, including dashboard statistics,
+account lists, approvals, rejections, suspension, and restoration.
+
+
+commuterRoutes.js
+-----------------
+Add this directly after the Supabase require:
+
+const { verifyToken, allowRoles } = require("../middleware/authenticateToken");
+const commuterOnly = [verifyToken, allowRoles("USER", "GENERAL_USER")];
+
+Keep this endpoint public:
+router.get("/search/destination", ...)
+
+Add ...commuterOnly before the callback on these private endpoints:
+
+router.post("/preference", ...commuterOnly, async (req, res) => {
+    const userId = req.user.id;
+    // Do not read userId from req.body.
+});
+
+router.get("/preference/:userId", ...commuterOnly, async (req, res) => {
+    const userId = req.user.id;
+    // Do not read userId from req.params.
+});
+
+router.get("/:id/points", ...commuterOnly, async (req, res) => {
+    const userId = req.user.id;
+});
+
+router.post("/:id/add-points", ...commuterOnly, async (req, res) => {
+    const userId = req.user.id;
+});
+
+Also validate pointsToAdd on the server. Do not accept an arbitrary value from
+the browser. Use a fixed reward value configured by TaxiFlow, for example:
+
+const RIDE_REWARD_POINTS = 10;
+const newTotal = (userData.points || 0) + RIDE_REWARD_POINTS;
+
+
+rankChatRoutes.js
+-----------------
+Your server.js already contains the active chat endpoints and this package
+protects /api/rank-admin/chat there. Do not mount a second duplicate chat
+router until the duplicate routes have been removed from server.js.
