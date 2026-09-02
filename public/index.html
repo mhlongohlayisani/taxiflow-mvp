@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TaxiFlow | Smart Taxi Rank Mapping</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     
     <!-- Leaflet CSS for the map -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -309,6 +313,309 @@
         .ai-chat-input-area button:hover {
             background: #15803d;
         }
+
+        /* ================================================================
+           TAXIFLOW PUBLIC MAP UI REFRESH
+           Visual-only layer: existing map, buttons and AI functions remain.
+        ================================================================= */
+        :root {
+            --tf-navy: #07111f;
+            --tf-navy-soft: #10243a;
+            --tf-green: #10b981;
+            --tf-green-dark: #047857;
+            --tf-blue: #2563eb;
+            --tf-white: #ffffff;
+            --tf-border: #d9e4ea;
+            --tf-muted: #64748b;
+        }
+
+        html, body { width: 100%; height: 100%; }
+        body {
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            background: #dfe8ec;
+            color: #102033;
+            -webkit-font-smoothing: antialiased;
+        }
+        button, input { font: inherit; }
+        button, a, .ai-chat-btn, .ai-chat-close { -webkit-tap-highlight-color: transparent; }
+        button:focus-visible,
+        a:focus-visible,
+        input:focus-visible,
+        .ai-chat-btn:focus-visible,
+        .ai-chat-close:focus-visible {
+            outline: 3px solid rgba(16,185,129,.38);
+            outline-offset: 3px;
+        }
+
+        .top-nav {
+            position: fixed;
+            top: 18px;
+            left: 18px;
+            right: 18px;
+            min-height: 66px;
+            padding: 8px;
+            border: 1px solid rgba(255,255,255,.12);
+            border-radius: 18px;
+            background: rgba(7,17,31,.95);
+            box-shadow: 0 18px 45px rgba(7,17,31,.27);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+        .brand {
+            min-width: 0;
+            padding: 7px 13px;
+            border: 0;
+            border-radius: 12px;
+            background: transparent;
+            box-shadow: none;
+        }
+        .brand h1 {
+            font-size: 1.35rem;
+            line-height: 1.1;
+            letter-spacing: -.055em;
+        }
+        .brand span { color: #34d399; }
+        .brand p {
+            margin-top: 4px;
+            color: #9fb0c3;
+            font-size: .72rem;
+            line-height: 1.2;
+        }
+        .login-btn {
+            min-height: 48px;
+            padding: 12px 18px;
+            border: 1px solid rgba(110,231,183,.24);
+            border-radius: 12px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            box-shadow: 0 7px 20px rgba(5,150,105,.25);
+            font-size: .84rem;
+            white-space: nowrap;
+        }
+        .login-btn:hover {
+            background: linear-gradient(135deg, #0da977, #047857);
+            box-shadow: 0 9px 24px rgba(5,150,105,.32);
+            transform: translateY(-1px);
+        }
+
+        #map { position: fixed; height: 100dvh; }
+        .leaflet-control-layers,
+        .leaflet-bar {
+            overflow: hidden;
+            border: 0 !important;
+            border-radius: 11px !important;
+            box-shadow: 0 8px 24px rgba(15,23,42,.2) !important;
+        }
+        .leaflet-control-zoom a { width: 36px !important; height: 36px !important; line-height: 36px !important; }
+        .leaflet-popup-content-wrapper {
+            padding: 6px;
+            border: 1px solid #dce5ec;
+            border-radius: 14px;
+            box-shadow: 0 15px 35px rgba(15,23,42,.18);
+        }
+        .leaflet-popup-content { margin: 12px 14px; line-height: 1.5; }
+        .leaflet-popup-content b { color: #07111f; font-size: .9rem; }
+        .leaflet-popup-content p { color: var(--tf-muted); font-size: .78rem; }
+
+        .action-bar {
+            position: fixed;
+            bottom: 18px;
+            padding: 7px;
+            gap: 5px;
+            border-radius: 17px;
+            background: rgba(7,17,31,.96);
+            border-color: rgba(255,255,255,.12);
+            box-shadow: 0 18px 45px rgba(7,17,31,.35);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+        .action-btn {
+            min-height: 48px;
+            padding: 11px 18px;
+            border-radius: 12px;
+            color: #e8eef5;
+            font-size: .82rem;
+            line-height: 1.2;
+            white-space: nowrap;
+        }
+        .action-btn:hover, .action-btn.active { background: #0f9f72; color: #fff; }
+        .action-btn.bus:hover, .action-btn.bus.active { background: var(--tf-blue); }
+
+        .ai-chat-btn {
+            position: fixed;
+            right: 18px;
+            bottom: 90px;
+            width: auto;
+            min-width: 116px;
+            height: 50px;
+            padding: 0 15px;
+            gap: 9px;
+            border: 1px solid rgba(110,231,183,.35);
+            border-radius: 14px;
+            background: rgba(7,17,31,.96);
+            box-shadow: 0 14px 35px rgba(7,17,31,.3);
+            font-size: .78rem;
+            font-weight: 800;
+        }
+        .ai-chat-btn:hover { background: #10243a; transform: translateY(-2px); }
+        .ai-chat-btn span { color: #dffaf0; white-space: nowrap; }
+
+        .ai-chat-panel {
+            position: fixed;
+            right: 18px;
+            bottom: 150px;
+            width: min(390px, calc(100vw - 36px));
+            max-height: min(570px, calc(100dvh - 250px));
+            border: 1px solid rgba(203,213,225,.95);
+            border-radius: 20px;
+            box-shadow: 0 28px 70px rgba(7,17,31,.32);
+        }
+        .ai-chat-header {
+            min-height: 60px;
+            padding: 15px 17px;
+            background: linear-gradient(135deg, #07111f, #10243a);
+            font-size: .92rem;
+        }
+        .ai-chat-header span { color: #6ee7b7; }
+        .ai-chat-close {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            color: #cbd5e1;
+        }
+        .ai-chat-close:hover { background: rgba(255,255,255,.08); }
+        .ai-chat-messages {
+            height: min(330px, calc(100dvh - 390px));
+            min-height: 220px;
+            padding: 16px;
+            gap: 12px;
+            background: #f5f8fa;
+            font-size: .85rem;
+            scrollbar-width: thin;
+            scrollbar-color: #cbd5e1 transparent;
+        }
+        .msg-bot, .msg-user {
+            max-width: 88%;
+            padding: 11px 13px;
+            line-height: 1.5;
+            box-shadow: 0 3px 9px rgba(15,23,42,.05);
+        }
+        .msg-bot { border: 1px solid #dce5ec; background: #fff; }
+        .msg-user { background: #0f9f72; }
+        .ai-chat-input-area { padding: 11px; border-color: #dce5ec; }
+        .ai-chat-input-area input {
+            min-width: 0;
+            min-height: 46px;
+            padding: 11px 13px;
+            border-color: #d5e0e7;
+            border-radius: 11px;
+            background: #f8fafc;
+            font-size: .86rem;
+        }
+        .ai-chat-input-area input:focus {
+            border-color: var(--tf-green);
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(16,185,129,.11);
+        }
+        .ai-chat-input-area button {
+            min-width: 70px;
+            min-height: 46px;
+            padding: 0 14px;
+            border-radius: 11px;
+            background: #0f9f72;
+        }
+
+        @media (max-width: 700px) {
+            .top-nav {
+                top: 10px;
+                left: 10px;
+                right: 10px;
+                min-height: 62px;
+                padding: 7px;
+                flex-direction: row;
+                align-items: center;
+                gap: 8px;
+                border-radius: 15px;
+            }
+            .brand { align-items: flex-start; padding: 6px 8px; text-align: left; }
+            .brand h1 { font-size: 1.15rem; }
+            .brand p { font-size: .65rem; }
+            .login-btn {
+                min-height: 46px;
+                padding: 10px 12px;
+                justify-content: center;
+                font-size: .76rem;
+            }
+            .action-bar {
+                left: 8px;
+                right: 8px;
+                bottom: max(8px, env(safe-area-inset-bottom));
+                transform: none;
+                display: grid;
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                gap: 4px;
+                padding: 5px;
+                border-radius: 15px;
+            }
+            .action-btn {
+                min-width: 0;
+                min-height: 51px;
+                padding: 8px 5px;
+                justify-content: center;
+                font-size: .69rem;
+                text-align: center;
+                white-space: normal;
+            }
+            .ai-chat-btn {
+                right: 10px;
+                bottom: calc(75px + env(safe-area-inset-bottom));
+                min-width: 52px;
+                width: 52px;
+                height: 52px;
+                padding: 0;
+                border-radius: 15px;
+            }
+            .ai-chat-btn span { display: none; }
+            .ai-chat-panel {
+                left: 10px;
+                right: 10px;
+                bottom: calc(139px + env(safe-area-inset-bottom));
+                width: auto;
+                max-height: calc(100dvh - 225px - env(safe-area-inset-bottom));
+                border-radius: 20px;
+            }
+            .ai-chat-messages {
+                height: min(320px, calc(100dvh - 360px));
+                min-height: 190px;
+            }
+            .leaflet-top { top: 78px; }
+            .leaflet-bottom { bottom: 76px; }
+        }
+
+        @media (max-width: 390px) {
+            .brand p { display: none; }
+            .login-btn { padding: 9px 10px; }
+            .login-btn svg { display: none; }
+            .action-btn { font-size: .65rem; }
+            .ai-chat-panel { left: 6px; right: 6px; }
+            .ai-chat-input-area button { min-width: 60px; padding: 0 10px; }
+        }
+
+        @media (max-height: 650px) and (max-width: 700px) {
+            .ai-chat-panel { top: 82px; bottom: 139px; max-height: none; }
+            .ai-chat-messages { height: auto; min-height: 0; flex: 1; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                scroll-behavior: auto !important;
+                animation-duration: .01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: .01ms !important;
+            }
+        }
     </style>
 
     <link
@@ -356,6 +663,7 @@
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
         </svg>
+        <span>AI Guide</span>
     </div>
     
     <div class="ai-chat-panel" id="aiChatPanel">
