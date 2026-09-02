@@ -615,6 +615,323 @@
                 padding: 30px 25px;
             }
         }
+
+        /* ================================================================
+           TAXIFLOW ACCESS UI REFRESH
+           Visual-only layer. Existing form IDs and authentication logic are
+           preserved; the mobile switches expose the same existing panels.
+        ================================================================= */
+        :root {
+            --primary: #10b981;
+            --primary-dark: #047857;
+            --bg-dark: #07111f;
+            --bg-green: #0f3d32;
+            --text-dark: #102033;
+            --text-light: #64748b;
+            --border: #d8e3ea;
+            --error: #dc2626;
+            --success: #059669;
+        }
+
+        html { min-height: 100%; background: #07111f; }
+        body {
+            min-height: 100dvh;
+            padding: 24px;
+            background:
+                radial-gradient(circle at 12% 14%, rgba(16,185,129,.19), transparent 28%),
+                radial-gradient(circle at 88% 86%, rgba(37,99,235,.13), transparent 27%),
+                linear-gradient(135deg, #050c17 0%, #071828 52%, #09281f 100%);
+            color: var(--text-dark);
+            font-size: 16px;
+            overflow-x: hidden;
+        }
+
+        button, input, select { font: inherit; }
+        button, .account-type, .back-link { -webkit-tap-highlight-color: transparent; }
+        button:focus-visible,
+        input:focus-visible,
+        select:focus-visible,
+        .account-type:focus-visible,
+        .back-link:focus-visible {
+            outline: 3px solid rgba(52,211,153,.4);
+            outline-offset: 2px;
+        }
+
+        .container {
+            width: min(1040px, 100%);
+            height: min(760px, calc(100dvh - 48px));
+            min-height: 620px;
+            border: 1px solid rgba(255,255,255,.13);
+            border-radius: 24px;
+            background: #fff;
+            box-shadow: 0 32px 90px rgba(0,0,0,.42);
+        }
+
+        .form-container { transition: transform .55s cubic-bezier(.2,.8,.2,1), opacity .45s ease; }
+        form {
+            padding: 42px clamp(34px, 5vw, 58px);
+            background: #fff;
+            scrollbar-width: thin;
+            scrollbar-color: #cbd5e1 transparent;
+        }
+        .sign-in-container form { justify-content: center; }
+        .sign-up-container form { padding-top: 34px; padding-bottom: 34px; }
+        form::-webkit-scrollbar { width: 7px; }
+        form::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 999px; }
+
+        h1 {
+            margin-bottom: 8px;
+            color: #0b1728;
+            font-size: clamp(1.8rem, 3vw, 2.25rem);
+            line-height: 1.12;
+            letter-spacing: -.045em;
+        }
+        .subtitle {
+            margin-bottom: 27px;
+            color: var(--text-light);
+            font-size: .9rem;
+            line-height: 1.5;
+        }
+        .brand-logo {
+            margin-bottom: 17px;
+            font-size: clamp(1.8rem, 3vw, 2.2rem);
+            letter-spacing: -.055em;
+        }
+        .sign-in-container .brand-logo { color: #07111f !important; }
+        .sign-in-container .brand-logo span { color: var(--primary) !important; }
+
+        .input-group { margin-bottom: 14px; }
+        .input-group label {
+            margin-bottom: 7px;
+            color: #435268;
+            font-size: .79rem;
+            font-weight: 700;
+            line-height: 1.35;
+        }
+        input, select {
+            min-height: 48px;
+            padding: 12px 14px;
+            border-color: var(--border);
+            border-radius: 11px;
+            background: #f7fafb;
+            color: #102033;
+            font-size: .9rem;
+        }
+        input::placeholder { color: #94a3b8; }
+        input:hover, select:hover { border-color: #b9c8d3; }
+        input:focus, select:focus {
+            border-color: var(--primary);
+            background: #fff;
+            box-shadow: 0 0 0 4px rgba(16,185,129,.11);
+        }
+        input[type="checkbox"] { min-height: auto; accent-color: var(--primary); }
+        .row { gap: 12px; }
+
+        button {
+            min-height: 49px;
+            margin-top: 9px;
+            padding: 13px 22px;
+            border-radius: 11px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            box-shadow: 0 8px 22px rgba(5,150,105,.22);
+            font-size: .82rem;
+            letter-spacing: .045em;
+        }
+        button:hover { background: linear-gradient(135deg, #0eaa77, #047857); transform: translateY(-1px); }
+        button:active { transform: translateY(0); }
+        button:disabled { transform: none; box-shadow: none; }
+        button.ghost {
+            min-height: 47px;
+            padding: 12px 28px;
+            border-color: rgba(255,255,255,.7);
+            border-radius: 11px;
+            box-shadow: none;
+        }
+
+        .section-title {
+            margin: 15px 0 14px;
+            padding-bottom: 8px;
+            border-color: #e3ebf0;
+            color: #047857;
+            font-size: .76rem;
+            letter-spacing: .075em;
+        }
+        .account-types {
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 8px;
+            margin-bottom: 22px;
+        }
+        .account-type {
+            min-height: 95px;
+            padding: 12px 5px 10px;
+            border: 1px solid #dce6eb;
+            border-radius: 13px;
+            background: #fff;
+            box-shadow: 0 3px 10px rgba(15,23,42,.035);
+        }
+        .account-type:hover {
+            border-color: #6ee7b7;
+            background: #f7fffb;
+            transform: translateY(-1px);
+        }
+        .account-type.active {
+            border: 2px solid var(--primary);
+            background: #ecfdf5;
+            box-shadow: 0 6px 18px rgba(16,185,129,.13);
+        }
+        .account-type .icon { margin-bottom: 7px; font-size: 1.45rem; }
+        .account-type strong { font-size: .73rem; line-height: 1.25; }
+        .account-type small { display: block; margin-top: 3px; font-size: .64rem; line-height: 1.25; }
+
+        .info-box {
+            padding: 12px 13px;
+            border-color: #a7f3d0;
+            border-radius: 11px;
+            background: #ecfdf5;
+            color: #166534;
+            font-size: .76rem;
+            line-height: 1.55;
+        }
+        .msg-box {
+            margin-top: 14px;
+            padding: 12px 13px;
+            border-radius: 10px;
+            font-size: .8rem;
+            line-height: 1.45;
+        }
+        .msg-error { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+        .msg-success { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
+
+        .overlay-container { transition: transform .55s cubic-bezier(.2,.8,.2,1); }
+        .overlay {
+            background:
+                radial-gradient(circle at 20% 15%, rgba(52,211,153,.21), transparent 27%),
+                linear-gradient(145deg, #07111f 0%, #0b2531 52%, #075f48 100%);
+            transition: transform .55s cubic-bezier(.2,.8,.2,1);
+        }
+        .overlay-panel { padding: 0 clamp(36px, 6vw, 68px); }
+        .overlay-panel::before {
+            content: "TRANSPORT, CONNECTED";
+            display: inline-flex;
+            margin-bottom: 20px;
+            padding: 7px 11px;
+            border: 1px solid rgba(110,231,183,.3);
+            border-radius: 999px;
+            background: rgba(16,185,129,.12);
+            color: #a7f3d0;
+            font-size: .68rem;
+            font-weight: 800;
+            letter-spacing: .12em;
+        }
+        .overlay-panel h1 { margin-bottom: 13px; font-size: clamp(1.8rem, 3vw, 2.35rem); }
+        .overlay-panel p {
+            max-width: 340px;
+            margin-bottom: 27px;
+            color: #d5e4e3;
+            font-size: .9rem;
+            line-height: 1.65;
+        }
+        .overlay-panel .brand-logo span { color: #6ee7b7; }
+
+        .back-link {
+            left: 50%;
+            bottom: max(7px, env(safe-area-inset-bottom));
+            z-index: 200;
+            display: inline-flex;
+            align-items: center;
+            min-height: 36px;
+            padding: 5px 10px;
+            transform: translateX(-50%);
+            border-radius: 9px;
+            color: #dbeafe;
+            font-size: .78rem;
+            font-weight: 600;
+        }
+        .back-link:hover { background: rgba(255,255,255,.08); }
+        .mobile-auth-switch { display: none; }
+
+        @media (max-width: 900px) {
+            .account-types { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+            .account-type { min-height: 91px; }
+            form { padding-left: 30px; padding-right: 30px; }
+        }
+
+        @media (max-width: 750px) {
+            body {
+                display: block;
+                min-height: 100dvh;
+                padding: 10px 10px calc(50px + env(safe-area-inset-bottom));
+                overflow-y: auto;
+            }
+            .container {
+                width: 100%;
+                height: calc(100dvh - 60px - env(safe-area-inset-bottom));
+                min-height: 640px;
+                border-radius: 21px;
+                box-shadow: 0 22px 60px rgba(0,0,0,.34);
+            }
+            .form-container { height: 100%; }
+            form { padding: 28px 22px; }
+            .sign-in-container form { justify-content: center; }
+            .sign-up-container form { justify-content: flex-start; }
+            .account-types { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+            .account-type { min-height: 91px; padding: 11px 7px; }
+            .account-type:last-child { grid-column: 1 / -1; min-height: 82px; }
+            .account-type strong { font-size: .78rem; }
+            .account-type small { font-size: .69rem; }
+            .mobile-auth-switch {
+                display: block;
+                width: 100%;
+                margin-top: 17px;
+                color: #64748b;
+                font-size: .82rem;
+                line-height: 1.5;
+                text-align: center;
+            }
+            .mobile-auth-switch button {
+                display: inline;
+                min-height: 44px;
+                width: auto;
+                margin: 0 0 0 3px;
+                padding: 8px 5px;
+                background: transparent;
+                box-shadow: none;
+                color: #047857;
+                font-size: inherit;
+                letter-spacing: 0;
+                text-transform: none;
+            }
+            .mobile-auth-switch button:hover { background: transparent; box-shadow: none; transform: none; color: #065f46; }
+            .back-link { position: absolute; bottom: 7px; }
+        }
+
+        @media (max-width: 480px) {
+            h1 { font-size: 1.72rem; }
+            .subtitle { margin-bottom: 22px; }
+            form { padding: 25px 17px; }
+            .row { flex-direction: column; gap: 0; }
+            .input-group { margin-bottom: 13px; }
+            input, select { min-height: 49px; font-size: .88rem; }
+            .section-title { margin-top: 13px; }
+            .account-types { gap: 7px; }
+            .account-type { min-height: 88px; }
+        }
+
+        @media (max-width: 360px) {
+            body { padding-left: 6px; padding-right: 6px; }
+            .container { border-radius: 17px; }
+            form { padding-left: 14px; padding-right: 14px; }
+            .account-type { padding-left: 4px; padding-right: 4px; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                scroll-behavior: auto !important;
+                animation-duration: .01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: .01ms !important;
+            }
+        }
     </style>
 </head>
 
@@ -1080,6 +1397,11 @@
                 class="msg-box"
             ></div>
 
+            <div class="mobile-auth-switch">
+                Already have an account?
+                <button type="button" onclick="document.getElementById('container').classList.remove('right-panel-active')">Sign in</button>
+            </div>
+
         </form>
 
     </div>
@@ -1143,6 +1465,11 @@
                 id="loginMsg"
                 class="msg-box"
             ></div>
+
+            <div class="mobile-auth-switch">
+                New to TaxiFlow?
+                <button type="button" onclick="document.getElementById('container').classList.add('right-panel-active')">Create an account</button>
+            </div>
 
         </form>
 
