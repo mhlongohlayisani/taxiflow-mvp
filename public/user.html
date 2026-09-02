@@ -213,7 +213,6 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
             <button class="bot-option-btn" onclick="handleBotOption(1)">1️⃣ Nearest Taxi Rank</button>
             <button class="bot-option-btn" onclick="handleBotOption(2)">2️⃣ Live Taxis & Destination</button>
             <button class="bot-option-btn" onclick="handleBotOption(3)">3️⃣ Bus Information</button>
-            <button class="bot-option-btn" onclick="handleBotOption(4)">4️⃣ Report Driver</button>
         </div>
     </div>
     <div class="ai-chat-input-area">
@@ -1199,7 +1198,7 @@ async function processBotInput(inputStr) {
     }
 
     if (cleanInput.includes('repeat')) {
-        const rep = "Please choose in the options: Option 1, Nearest Taxi Rank. Option 2, Live Taxis and Destination. Option 3, Bus Information. Option 4, Report Taxi Driver.";
+        const rep = "Please choose in the options: Option 1, Nearest Taxi Rank. Option 2, Live Taxis and Destination. Option 3, Bus Information.";
         appendBotMessage(rep, rep);
         return;
     }
@@ -1207,7 +1206,7 @@ async function processBotInput(inputStr) {
     if (botState === 'STANDBY') {
         if (cleanInput.includes(hotword) || cleanInput.includes('hello')) {
             botState = 'MENU';
-            const helloText = "Hello. What can I do for you today? Choose in the options: Option 1, Nearest Taxi Rank. Option 2, Live Taxis and Destination. Option 3, Bus Information. Option 4, Report Taxi Driver.";
+            const helloText = "Hello. What can I do for you today? Choose in the options: Option 1, Nearest Taxi Rank. Option 2, Live Taxis and Destination. Option 3, Bus Information.";
             appendBotMessage(helloText, helloText);
         }
         return;
@@ -1244,17 +1243,13 @@ async function processBotInput(inputStr) {
             const busMenu = "You selected Bus Information. Option 1, see bus ranks. Option 2, verify bus driver.";
             appendBotMessage(busMenu, busMenu);
         }
-        else if (cleanInput.includes('report') || cleanInput.includes('4') || cleanInput.includes('four')) {
-            appendBotMessage("Opening taxi driver safety report.", "Opening taxi driver report.");
-            setTimeout(() => { openReportModal('TAXI'); toggleChat(); }, 1200);
-        }
         else if (cleanInput.includes('greeting') || cleanInput.includes('hello')) {
             botState = 'STANDBY';
             const greetReply = "Thank you so much for caring! I am on standby.";
             appendBotMessage(greetReply, greetReply);
         }
         else {
-            const fallback = "Please choose from Option 1, 2, 3, or 4.";
+            const fallback = "Please choose from Option 1, 2, or 3.";
             appendBotMessage(fallback, fallback);
         }
     }
