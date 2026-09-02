@@ -1008,6 +1008,9 @@
         let activeHelpData = null;
         let isBroadcasting = false;
         let watchId = null;
+        let broadcastHeartbeatId = null;
+        let lastGpsAccuracy = Infinity;
+        const MAX_DRIVER_GPS_ACCURACY_METERS = 150;
         let currentPassengers = 0;
         let maxCapacity = 15;
         let isApproved = false;
@@ -1784,14 +1787,21 @@ async function generateNewPasscode() {
             updateCapacityUI();
 
             try {
-                await apiFetch(`${API_BASE}/api/drivers/capacity`, {
+                const updates = [apiFetch(`${API_BASE}/api/drivers/capacity`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
                         driver_id: currentUser.id,
                         passengers_inside: currentPassengers
                     })
-                });
+                })];
+
+                // Immediately publish FULL / NOT FULL to commuters instead of
+                // waiting for the taxi to move or for the next GPS heartbeat.
+                if (isBroadcasting && lastLat !== null && lastLng !== null) {
+                    updates.push(sendLocationUpdate(lastLat, lastLng, lastGpsAccuracy));
+                }
+                await Promise.all(updates);
             } catch (e) {
                 console.error("Capacity sync error:", e);
             }
@@ -1861,15 +1871,24 @@ async function generateNewPasscode() {
             }
 
             const pill = document.getElementById("broadcastStatusPill");
-            pill.textContent = "Live Online";
-            pill.className = "driver-status-pill online";
+            pill.textContent = "Finding GPS";
+            pill.className = "driver-status-pill offline";
 
             lastStationaryCheckTime = Date.now();
 
             watchId = navigator.geolocation.watchPosition(
                 pos => {
+                    const accuracy = Number(pos.coords.accuracy);
+                    if (!Number.isFinite(accuracy) || accuracy > MAX_DRIVER_GPS_ACCURACY_METERS) {
+                        pill.textContent = `GPS Weak ±${Math.round(accuracy || 0)}m`;
+                        pill.className = "driver-status-pill offline";
+                        return;
+                    }
                     driverLat = pos.coords.latitude;
                     driverLng = pos.coords.longitude;
+                    lastGpsAccuracy = accuracy;
+                    pill.textContent = "Live Online";
+                    pill.className = "driver-status-pill online";
 
                     const userIcon = L.divIcon({ className: 'user-location-icon', iconSize: [18, 18] });
                     if (!driverGpsMarker) {
@@ -1881,7 +1900,7 @@ async function generateNewPasscode() {
 
                     lastLat = driverLat;
                     lastLng = driverLng;
-                    sendLocationUpdate(driverLat, driverLng);
+                    sendLocationUpdate(driverLat, driverLng, accuracy);
                     checkStoppageAndDeviation(driverLat, driverLng);
 
                     // ARRIVAL CHECK AT DESTINATION RANK (Within 200m)
@@ -1896,11 +1915,18 @@ async function generateNewPasscode() {
                     }
                 },
                 err => console.warn(err),
-                { enableHighAccuracy: true, maximumAge: 0 }
+                { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 }
             );
+
+            clearInterval(broadcastHeartbeatId);
+            broadcastHeartbeatId = setInterval(() => {
+                if (isBroadcasting && Number.isFinite(lastGpsAccuracy) && lastLat !== null && lastLng !== null) {
+                    sendLocationUpdate(lastLat, lastLng, lastGpsAccuracy);
+                }
+            }, 15000);
         }
 
-        async function sendLocationUpdate(lat, lng) {
+        async function sendLocationUpdate(lat, lng, accuracy = lastGpsAccuracy) {
             if (!lat || !lng) {
                 if (!lastLat || !lastLng) return;
                 lat = lastLat;
@@ -1920,7 +1946,9 @@ async function generateNewPasscode() {
                         destination: activeDestination,
                         is_full: seatsLeft === 0,
                         passengers_inside: currentPassengers,
-                        show_on_map: true
+                        show_on_map: true,
+                        gps_accuracy: Number.isFinite(accuracy) ? Math.round(accuracy) : null,
+                        location_updated_at: new Date().toISOString()
                     })
                 });
             } catch (e) {
@@ -1930,6 +1958,9 @@ async function generateNewPasscode() {
 
         function stopBroadcasting() {
             if (watchId) navigator.geolocation.clearWatch(watchId);
+            watchId = null;
+            clearInterval(broadcastHeartbeatId);
+            broadcastHeartbeatId = null;
             isBroadcasting = false;
 
             const btn = document.getElementById("broadcastBtn");
@@ -1953,7 +1984,9 @@ async function generateNewPasscode() {
                     driver_id: currentUser.id,
                     latitude: null,
                     longitude: null,
-                    show_on_map: false
+                    show_on_map: false,
+                    gps_accuracy: null,
+                    location_updated_at: new Date().toISOString()
                 })
             });
 
