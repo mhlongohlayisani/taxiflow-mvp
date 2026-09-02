@@ -529,14 +529,10 @@ app.post('/api/rank-admin/trips/start', async (req, res) => {
 // START SERVER
 // ==========================================
 
-app.listen(PORT, () => {
-    console.log("");
-    console.log("====================================");
-    console.log("        TAXIFLOW MVP SERVER");
-    console.log("====================================");
-    console.log("");
-    console.log(`Server: http://localhost:${PORT}`);
-    console.log("Status: ONLINE");
-    console.log("");
-    console.log("====================================");
-});
+module.exports = app;
+
+if (require.main === module) {
+    app.listen(PORT, () => {
+        console.log(`TaxiFlow server running on http://localhost:${PORT}`);
+    });
+}
